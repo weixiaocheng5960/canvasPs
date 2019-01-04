@@ -497,7 +497,13 @@ document.querySelectorAll(".default_btn>a")[1].onclick=function () {
 // 通用窗口-----s
 //弹出通用窗口 --关闭按钮
 var default_window=document.querySelector(".default");
-function show_def_window(isshow,callback=null,cont="是否继续执行?",tit="信息提示") {
+function show_def_window(isshow,callback,cont,tit) {
+    if(cont=='undefined'){
+        cont="是否继续执行?";
+    }
+    if(tit=='undefined'){
+        tit="信息提示";
+    }
     if (isshow) {
         default_window.style.display="block";
     }else{

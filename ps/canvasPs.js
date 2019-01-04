@@ -1,5 +1,5 @@
 //抠图 js 类-----基于canvas
-function Ps(c=null){
+function CanvasPs(c){
     this.c=c;//canvas
     this.ct=c.getContext('2d');
     this.s_toggle=false;//选区闪烁用
@@ -13,21 +13,33 @@ function Ps(c=null){
     }
 }
 //初始化
-Ps.prototype.ready=function(){
+CanvasPs.prototype.ready=function(){
     this.w = c.width;
     this.h = c.height;
     this.save_data=ct.getImageData(0,0,this.w,this.h);
 }
+//打开图片
+CanvasPs.prototype.open=function(filename){
+    this.img=new Image();
+    this.img.src=filename;
+    this.img.onload=function() {
+        // this.ready();
+    }
+}
+//获取原始图片
+CanvasPs.prototype.getImg=function(){
+    return this.img;
+}
 //获取保存数据
-Ps.prototype.get_save=function(){
+CanvasPs.prototype.get_save=function(){
     return this.save_data;
 }
 //取消选择
-Ps.prototype.set_s_none = function () {
+CanvasPs.prototype.set_s_none = function () {
     this.old_s=null;
 }
 //采样点数据 ----处理--判断重复
-Ps.prototype.select_data=function(dd){
+CanvasPs.prototype.select_data=function(dd){
     if(this.old_s){
         if(Math.abs(dd[0]-this.old_s.data[0])==100){
             return true;
@@ -40,11 +52,11 @@ Ps.prototype.select_data=function(dd){
     
 }
 //设置容差
-Ps.prototype.setAlw=function(a){
+CanvasPs.prototype.setAlw=function(a){
     this.alw=a;
 }
 //获取数据
-Ps.prototype.getData=function(x,y){
+CanvasPs.prototype.getData=function(x,y){
     this.o_data=ct.getImageData(0,0,this.w,this.h);
     var dat=ct.getImageData(x,y,1,1);//采集数据
     if(this.select_data(dat)){
@@ -85,7 +97,7 @@ Ps.prototype.getData=function(x,y){
     return [this.o_data,this.n_data];
 }
 //删除选区
-Ps.prototype.delet_s=function(){
+CanvasPs.prototype.delet_s=function(){
     if(!this.old_s){
         return;
     }
@@ -101,7 +113,7 @@ Ps.prototype.delet_s=function(){
     }
 }
 //调节颜色
-Ps.prototype.alter_color = function(color) {
+CanvasPs.prototype.alter_color = function(color) {
     if(!this.old_s){
         return;
     }
@@ -142,7 +154,7 @@ Ps.prototype.alter_color = function(color) {
     return this.save_data;
 }
 //输出 JPEG 格式
-Ps.prototype.save_jpg=function() {
+CanvasPs.prototype.save_jpg=function() {
     var img_data=this.ct.getImageData(0,0,this.c.width,this.c.height);
     for (var i = 0; i < img_data.data.length; i+=4) {
         //选择区
@@ -156,7 +168,7 @@ Ps.prototype.save_jpg=function() {
     return img_data;
 }
 //裁剪 ----图片
-Ps.prototype.img_cut=function(x,y,w,h) {
+CanvasPs.prototype.img_cut=function(x,y,w,h) {
     var temp_data=this.ct.getImageData(x,y,w,h);
     this.c.width=w;
     this.c.height=h;

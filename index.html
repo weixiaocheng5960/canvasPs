@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="ps/index.css">
     <title>在线抠图工具,简单ps</title>
     <script src="ps/ui.js"></script>
-    <script src="ps/ps.js"></script>
+    
 </head>
 <body>
     <div class="box">
@@ -90,11 +90,15 @@
             </div>
         </div>
     </div>
+    <div id="test"></div>
+    <script src="ps/canvasPs.js"></script>
     <script>
         var c = document.querySelector('#canvas');
         var ct = c.getContext('2d');
         //创建PS对象
-        var ps=new Ps(c);
+        var ps=new CanvasPs(c);
+        ps.open('ps/test.jpg');
+        document.querySelector('#test').appendChild(ps.getImg())
     </script>
     <script src="ps/main.js"></script>
 </body>
