@@ -1,0 +1,147 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+.box{
+    min-width: 800px;
+}
+.box>div{
+    float: left;
+    box-sizing: border-box;
+    border: solid 2px rgb(122, 122, 122);
+}
+.menu{
+    width: 80px;
+    background-color: #919090;
+    height: 100%;
+    text-align: center;
+    color:white;
+}
+.work{
+    background-color: rgb(235, 235, 235);
+    height: 100%;
+    overflow: scroll;
+    position: relative;
+}
+/* 菜单 */
+.menubtn{
+    text-align: center;
+    display: block;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    color: white;
+    text-decoration: none;
+}
+.menubtn:hover{
+    color: #636262;
+}
+.menu>span{
+    font-size: 12px;
+}
+.menu>input{
+    width: 50%;
+}
+/* 画布 */
+#canvas{
+    position: absolute;
+    border: solid 2px rgb(134, 134, 134);
+    background-image: url("../imgs/grid.jpg");
+}
+/*弹出层*/
+.alert>div{
+    position: fixed;
+    border: solid 2px rgb(134, 134, 134);
+    z-index: 10;
+}
+/*-----颜色----*/
+.color{
+    display: none;
+    width: 400px;
+    height: 300px;
+}
+.windows{
+    background-color: #F8F8F8;
+}
+.windows>div{
+    width: 80%;
+    margin: 2% auto;
+    text-align: center;
+}
+.windows>h4{
+    background-color: #8E8C8C;
+    color: white;
+    cursor: default;
+}
+.windows>h4>span{
+    float: right;
+    padding-right: 8px;
+    padding-left: 8px;
+    cursor: pointer;
+}
+.contr_color>h5{
+    height: 30px;
+    line-height: 30px;
+    color: #5B5B5B;
+    margin-top: 20px;
+}
+.contr_color input{
+    width: 80%;
+}
+.submit{
+    margin-top: 20px;
+}
+.submit>a{
+    text-decoration: none;
+    color: white;
+    background-color: #767676;
+    padding: 5px;
+    border-radius: 4px;
+    margin-right: 14%;
+    margin-left: 14%;
+}
+.submit_color>a:hover{
+    background-color: #555454;
+}
+/*笔刷光标模拟*/
+.easer{
+    position: absolute;
+    background-color: white;
+    width: 10px;
+    height: 10px;
+    z-index: 1;
+    display: none;
+}
+/*保存窗口*/
+.save{
+    width: 400px;
+    height: 200px;
+    display: none;
+}
+.contr_save>h5{
+    margin: 10%;
+}
+.contr_save span{
+    margin: 4px;
+    cursor: default;
+    border: solid 1px #CECECE;
+}
+/*通用窗口*/
+.default{
+    width: 300px;
+    height: 200px;
+    display: none;
+}
+.default_cont{
+    height: 120px;
+}
+.default_cont>p{
+    text-align: left;
+    cursor: default;
+}
+/*裁剪显示框*/
+.cut_box{
+    border: solid 2px red;
+    position: absolute;
+    display: none;
+    cursor: crosshair;
+}
