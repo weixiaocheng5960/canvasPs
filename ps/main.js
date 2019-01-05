@@ -15,23 +15,16 @@ document.querySelectorAll('.menubtn')[0].onclick=function(){
 }
 input.onchange=function () {
     if (this.files[0]) {
-        img.src=URL.createObjectURL(this.files[0]);
+        ps.openFile(this.files[0]);
     }
     
 }
 img.onload=function(){
-    ct.clearRect(0,0,c.width,c.height);
-    c.width=img.naturalWidth;
-    c.height=img.naturalHeight;
-    ct.drawImage(img,0,0);
     init();
 }
 //初始化 数据
 function init() {
-    c.style.width=null;
-    c.style.height=null;
-    c.style.left=0;
-    c.style.top=0;
+    
     document.querySelectorAll(".menu>input")[3].value=100;
     document.querySelectorAll(".menu>input")[2].value="#000000";
     document.querySelectorAll(".menu>input")[1].value=10;
@@ -92,18 +85,7 @@ var m_down=false;//是否按钮鼠标
 var data_img=document.createElement('img');//复制数据用
 var data_m=null;//获取数据的位置
 c.ondblclick=function(e) {
-
-    //复制数据
-    ps_d=[];
-    // data_m=e;
-    // data_img.src=c.toDataURL('image/png');
-    ps_d=ps.getData(e.offsetX/(scale/100), e.offsetY/(scale/100)); 
-    if (ps_d.length != 0) {
-        olddt = ps.get_save();
-        dt = ps_d[1];
-        clearInterval(st);
-        st = setInterval(selected, 500);
-    }
+    ps.select(e.offsetX / (scale / 100), e.offsetY / (scale / 100))
 }
 c.onmousedown = function (e) {
     e.preventDefault();
@@ -122,7 +104,7 @@ c.onmouseup = function (e) {
     m_down=false;
     //绘制 结束
     if (pen||clear_pen) {
-        ps.ready();//更新PS类
+        // ps.ready();//更新PS类
     }
 
 }
@@ -267,7 +249,8 @@ function selected() {
 }
 //取消选择
 document.querySelectorAll('.menubtn')[2].onclick = function () {
-    select_null();
+    // select_null();
+    ps.stopAnimate()
 }
 //设置容差
 document.querySelectorAll('.menu>input')[0].onchange = function () {
@@ -328,7 +311,6 @@ document.querySelectorAll('.menubtn')[7].onclick=function() {
 //删除选区
 document.querySelectorAll('.menubtn')[3].onclick=function() {
     ps.delet_s();
-    select_null();
 }
 //开启 涂鸦
 document.querySelectorAll('.menubtn')[8].onclick=function() {
