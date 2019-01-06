@@ -84,41 +84,41 @@ var st=null;//选择效果
 var m_down=false;//是否按钮鼠标
 var data_img=document.createElement('img');//复制数据用
 var data_m=null;//获取数据的位置
-c.ondblclick=function(e) {
-    ps.select(e.offsetX / (scale / 100), e.offsetY / (scale / 100))
-}
-c.onmousedown = function (e) {
-    e.preventDefault();
-    m_down=true;
-    c_p[0]=e.pageX-c.offsetLeft;
-    c_p[1]=e.pageY-c.offsetTop;
-    mouse_posi[0]=e.pageX-80;
-    mouse_posi[1]=e.pageY;
-    //绘制 开始
-    if (cutting) {
-        cut_mouse[0]=e.layerX;
-        cut_mouse[1]=e.layerY;
-    }
-}
-c.onmouseup = function (e) {
-    m_down=false;
-    //绘制 结束
-    if (pen||clear_pen) {
-        // ps.ready();//更新PS类
-    }
+// c.ondblclick=function(e) {
+//     ps.wand(e.offsetX / (scale / 100), e.offsetY / (scale / 100));
+// }
+// c.onmousedown = function (e) {
+//     e.preventDefault();
+//     m_down=true;
+//     c_p[0]=e.pageX-c.offsetLeft;
+//     c_p[1]=e.pageY-c.offsetTop;
+//     mouse_posi[0]=e.pageX-80;
+//     mouse_posi[1]=e.pageY;
+//     //绘制 开始
+//     if (cutting) {
+//         cut_mouse[0]=e.layerX;
+//         cut_mouse[1]=e.layerY;
+//     }
+// }
+// c.onmouseup = function (e) {
+//     m_down=false;
+//     //绘制 结束
+//     if (pen||clear_pen) {
+//         // ps.ready();//更新PS类
+//     }
 
-}
-c.onmousemove=function(e) {
-    if (m_down&&space) {
-        //移动----------
-        move_c(e.pageX-c_p[0],e.pageY-c_p[1]);//移动画布
-    }if (m_down&&!space) {
-        //执行区-----绘制-----
-        draw_pen(e.layerX,e.layerY);//画笔 涂鸦
-        draw_cuting(e.pageX-80,e.pageY);//裁剪
-        clear_canvas(e.layerX,e.layerY);// 擦除
-    }
-}
+// }
+// c.onmousemove=function(e) {
+//     if (m_down&&space) {
+//         //移动----------
+//         move_c(e.pageX-c_p[0],e.pageY-c_p[1]);//移动画布
+//     }if (m_down&&!space) {
+//         //执行区-----绘制-----
+//         draw_pen(e.layerX,e.layerY);//画笔 涂鸦
+//         draw_cuting(e.pageX-80,e.pageY);//裁剪
+//         clear_canvas(e.layerX,e.layerY);// 擦除
+//     }
+// }
 //裁剪专区
 var warp=document.querySelector(".warp");
 warp.onmousedown=function(e) {
@@ -310,7 +310,7 @@ document.querySelectorAll('.menubtn')[7].onclick=function() {
 }
 //删除选区
 document.querySelectorAll('.menubtn')[3].onclick=function() {
-    ps.delet_s();
+    ps.clearSelect();
 }
 //开启 涂鸦
 document.querySelectorAll('.menubtn')[8].onclick=function() {
@@ -373,12 +373,7 @@ document.querySelectorAll(".color_btn>a")[1].onclick=function () {
     color[1]=c_input[1].value;//红
     color[2]=c_input[2].value;//绿
     color[3]=c_input[3].value;//栏
-    olddt=ps.alter_color(color);
-    if (olddt) {
-        ct.putImageData(olddt, 0, 0);
-        clearInterval(st);
-        ps.set_s_none();
-    }
+    ps.colorControl(color);
     document.querySelectorAll('.menubtn')[4].click();
 }
 //弹出保存窗口

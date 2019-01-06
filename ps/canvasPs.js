@@ -2,15 +2,29 @@
 function CanvasPs(c){
     this.c=c;//canvas
     this.ct=c.getContext('2d');
-    this.s_toggle=false;//选区闪烁用
     this.n_data=null;//新数据
     this.o_data=null;//原始数据
-    this.old_s=null;//上一次选择
-    this.save_data;//直接数据，保存可用
+    this.data;//直接数据，保存可用
     this.alw=0;//容差
     this.animation=null;//选区视效
+    this.sample=null;//采样点
+    this.select=false;//选择状态
+    this.mode=0;//0-正常 1-画笔 2-橡皮擦 3-裁剪 4-调色 5-移动画布 6-缩放画布
     if(c==null){
         return;
+    }
+    //鼠标交互
+    this.c.onmousedown = function (e) {
+
+    }
+    this.c.onmouseup = function (e) {
+
+    }
+    this.c.onmousemove = function (e) {
+
+    }
+    this.c.ondblclick = function (e) {
+        
     }
 }
 //初始化
@@ -21,9 +35,10 @@ CanvasPs.prototype.ready=function(){
     this.c.style.top=0;
     this.w = c.width;
     this.h = c.height;
-    this.save_data=this.ct.getImageData(0,0,this.w,this.h);
+    this.data=this.ct.getImageData(0,0,this.w,this.h);
     this.n_data = this.ct.getImageData(0, 0, this.w, this.h);
     this.o_data = this.ct.getImageData(0, 0, this.w, this.h);
+    
 }
 //打开文件
 CanvasPs.prototype.open=function(filename){
@@ -68,16 +83,12 @@ CanvasPs.prototype.getImg=function(){
 }
 //获取保存数据
 CanvasPs.prototype.get_save=function(){
-    return this.save_data;
-}
-//取消选择
-CanvasPs.prototype.set_s_none = function () {
-    this.old_s=null;
+    return this.data;
 }
 //采样点数据 ----处理--判断重复
 CanvasPs.prototype.select_data=function(dd){
-    if(this.old_s){
-        if(Math.abs(dd[0]-this.old_s.data[0])==100){
+    if(this.sample){
+        if(Math.abs(dd[0]-this.sample.data[0])==100){
             return true;
         }else{
             return false;
@@ -88,61 +99,16 @@ CanvasPs.prototype.select_data=function(dd){
     
 }
 //设置选区---魔术棒工具--默认只选择 闭合区间
-CanvasPs.prototype.select=function(sx,sy,all){
-    // this.o_data = this.ct.getImageData(0, 0, this.w, this.h);
-    // var borderArea=false,index=sx*sy,opt=sx*sy,go=0;
-    // var dat = this.ct.getImageData(sx, sy, 1, 1);//采集数据
-    // while(!borderArea){
-    //     if(Math.abs(this.n_data.data[index]-dat.data[0])<=this.alw&&Math.abs(this.n_data.data[index+1]-dat.data[1])<=this.alw&&Math.abs(this.n_data.data[index+2]-dat.data[2])<=this.alw&&Math.abs(this.n_data.data[index+3]-dat.data[3])<=this.alw){
-    //         if(this.n_data.data[index+3]>150){
-    //             this.n_data.data[index+3]=dat.data[3]-100;
-    //         }else{
-    //             this.n_data.data[index+3]=dat.data[3]+100;
-    //         }
-    //          if(this.n_data.data[index+3]!=0){
-    //             this.n_data.data[index+1]=dat.data[0];
-    //             this.n_data.data[index+2]=dat.data[1];
-    //             this.n_data.data[index+4]=dat.data[2];
-    //         }else{
-    //             this.n_data.data[index]=100;
-    //             this.n_data.data[index+1]=100;
-    //             this.n_data.data[index+4]=100;
-    //         }
-    //         var rc=150;
-    //         if (Math.abs(this.n_data.data[index]-255)<rc&&Math.abs(this.n_data.data[index+1]-255)<rc&&Math.abs(this.n_data.data[index+2]-255)<rc&&Math.abs(this.n_data.data[index+3]-255)<rc) {
-    //             this.n_data.data[index+0]=255;
-    //             this.n_data.data[index+1]=0;
-    //             this.n_data.data[index+2]=0;
-    //             this.n_data.data[index+2]=200;
-    //         }
-    //         if (go==0) {
-    //             index += 4; 
-    //         }else{
-    //             index -= 4; 
-    //         }
-                     
-    //     }else{
-    //         if (go == 0){
-    //             index = opt;
-    //             go = 1;
-    //         }else{
-    //             borderArea=true;
-    //         }
-    //     }
-    //     if (index>=this.c.width*this.c.height||index<0) {
-    //         borderArea = true;
-    //     }
-    // }
+CanvasPs.prototype.wand=function(sx,sy,all){
     this.o_data = ct.getImageData(0, 0, this.w, this.h);
     var dat = ct.getImageData(sx, sy, 1, 1);//采集数据
     if (this.select_data(dat)) {
-        console.log("已选择")
         return [];
     } else {
-        this.old_s = dat;
+        this.sample = dat;
     }
     this.n_data = ct.getImageData(0, 0, this.w, this.h);
-    for (var i = 0; i < this.save_data.data.length; i += 4) {
+    for (var i = 0; i < this.data.data.length; i += 4) {
         //选择区
         if (Math.abs(this.n_data.data[i] - dat.data[0]) <= this.alw && Math.abs(this.n_data.data[i + 1] - dat.data[1]) <= this.alw && Math.abs(this.n_data.data[i + 2] - dat.data[2]) <= this.alw && Math.abs(this.n_data.data[i + 3] - dat.data[3]) <= this.alw) {
             if (this.n_data.data[i + 3] > 150) {
@@ -169,22 +135,19 @@ CanvasPs.prototype.select=function(sx,sy,all){
         }
         //非选择区
     }
-
-    // return [this.o_data, this.n_data];
-    // this.ct.putImageData(this.n_data, 0, 0);
-    
     this.selectAnimate();
 }
 // 选区闪烁提示
 CanvasPs.prototype.selectAnimate=function(){
     var cps=this;
     var toggle = true;
+    this.select = true;
     this.animation=setInterval(function(){
         if (toggle) {
             cps.ct.putImageData(cps.n_data, 0, 0);
             toggle = false;
         } else {
-            cps.ct.putImageData(cps.o_data, 0, 0);
+            cps.ct.putImageData(cps.data, 0, 0);
             toggle = true;
         }
         
@@ -193,110 +156,71 @@ CanvasPs.prototype.selectAnimate=function(){
 // 选区闪烁提示关闭
 CanvasPs.prototype.stopAnimate = function () {
     clearInterval(this.animation);
-    this.ct.putImageData(this.o_data,0,0);
+    this.select = false;
+    this.ct.putImageData(this.data,0,0);
 }
 //设置容差
 CanvasPs.prototype.setAlw=function(a){
     this.alw=a;
 }
-//获取数据
-CanvasPs.prototype.getData=function(x,y){
-    this.o_data=ct.getImageData(0,0,this.w,this.h);
-    var dat=ct.getImageData(x,y,1,1);//采集数据
-    if(this.select_data(dat)){
-        console.log("已选择")
-        return [];
-    }else{
-        this.old_s=dat;
-    }
-    this.n_data=ct.getImageData(0,0,this.w,this.h);
-	for (var i = 0; i < this.save_data.data.length; i+=4) {
-	    //选择区
-	    if(Math.abs(this.n_data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.n_data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.n_data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.n_data.data[i+3]-dat.data[3])<=this.alw){
-			if(this.n_data.data[i+3]>150){
-				this.n_data.data[i+3]=dat.data[3]-100;
-			}else{
-				this.n_data.data[i+3]=dat.data[3]+100;
-			}
-             if(this.n_data.data[i+3]!=0){
-                this.n_data.data[i+1]=dat.data[0];
-                this.n_data.data[i+2]=dat.data[1];
-                this.n_data.data[i+4]=dat.data[2];
-            }else{
-                this.n_data.data[i]=100;
-                this.n_data.data[i+1]=100;
-                this.n_data.data[i+4]=100;
-            }
-            var rc=150;
-            if (Math.abs(this.n_data.data[i]-255)<rc&&Math.abs(this.n_data.data[i+1]-255)<rc&&Math.abs(this.n_data.data[i+2]-255)<rc&&Math.abs(this.n_data.data[i+3]-255)<rc) {
-                this.n_data.data[i+0]=255;
-                this.n_data.data[i+1]=0;
-                this.n_data.data[i+2]=0;
-                this.n_data.data[i+2]=200;
-            }			
-		}
-				//非选择区
-    }
 
-    return [this.o_data,this.n_data];
-}
 //删除选区
-CanvasPs.prototype.delet_s=function(){
-    if(!this.old_s){
+CanvasPs.prototype.clearSelect=function(){
+    if(!this.select){
         return;
     }
-    var dat=this.old_s;
-    for (var i = 0; i < this.o_data.data.length; i+=4) {
+    var dat=this.sample;
+    for (var i = 0; i < this.data.data.length; i+=4) {
 	    //选择区
-	    if(Math.abs(this.o_data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.o_data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.o_data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.o_data.data[i+3]-dat.data[3])<=this.alw){
-            this.o_data.data[i]=0;
-            this.o_data.data[i+1]=0;
-			this.o_data.data[i+2]=0;
-			this.o_data.data[i+3]=0;					
+	    if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
+            this.data.data[i]=0;
+            this.data.data[i+1]=0;
+			this.data.data[i+2]=0;
+			this.data.data[i+3]=0;					
 		}
     }
     this.stopAnimate();
 }
 //调节颜色
-CanvasPs.prototype.alter_color = function(color) {
-    if(!this.old_s){
+CanvasPs.prototype.colorControl = function(color) {
+    if (!this.select) {
         return;
     }
-    var dat=this.old_s;
-    for (var i = 0; i < this.save_data.data.length; i+=4) {
+    var dat=this.sample;
+    for (var i = 0; i < this.data.data.length; i+=4) {
         //选择区
-        if(Math.abs(this.save_data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.save_data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.save_data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.save_data.data[i+3]-dat.data[3])<=this.alw){
-            if (this.save_data.data[i]+parseInt(color[0])>255) {
-                this.save_data.data[i]=255;
-            }else if (this.save_data.data[i]+parseInt(color[0])<0) {
-                this.save_data.data[i]=0;
+        if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
+            if (this.data.data[i]+parseInt(color[0])>255) {
+                this.data.data[i]=255;
+            }else if (this.data.data[i]+parseInt(color[0])<0) {
+                this.data.data[i]=0;
             }else{
-                this.save_data.data[i]+=parseInt(color[0]);
+                this.data.data[i]+=parseInt(color[0]);
             }
-            if (this.save_data.data[i+1]+parseInt(color[1])>255) {
-                this.save_data.data[i+1]=255;
-            }else if (this.save_data.data[i+1]+parseInt(color[1])<0) {
-                this.save_data.data[i+1]=1;
+            if (this.data.data[i+1]+parseInt(color[1])>255) {
+                this.data.data[i+1]=255;
+            }else if (this.data.data[i+1]+parseInt(color[1])<0) {
+                this.data.data[i+1]=1;
             }else{
-                this.save_data.data[i+1]+=parseInt(color[1]);
+                this.data.data[i+1]+=parseInt(color[1]);
             }
-            if (this.save_data.data[i+2]+parseInt(color[2])>255) {
-                this.save_data.data[i+2]=255;
-            }else if (this.save_data.data[i+2]+parseInt(color[2])<0) {
-                this.save_data.data[i+2]=0;
+            if (this.data.data[i+2]+parseInt(color[2])>255) {
+                this.data.data[i+2]=255;
+            }else if (this.data.data[i+2]+parseInt(color[2])<0) {
+                this.data.data[i+2]=0;
             }else{
-                this.save_data.data[i+2]+=parseInt(color[2]);
+                this.data.data[i+2]+=parseInt(color[2]);
             }
-            if (this.save_data.data[i+3]+parseInt(color[3])>255) {
-                this.save_data.data[i+3]=255;
-            }else if (this.save_data.data[i+3]+parseInt(color[3])<0) {
-                this.save_data.data[i+3]=0;
+            if (this.data.data[i+3]+parseInt(color[3])>255) {
+                this.data.data[i+3]=255;
+            }else if (this.data.data[i+3]+parseInt(color[3])<0) {
+                this.data.data[i+3]=0;
             }else{
-                this.save_data.data[i+3]+=parseInt(color[3]);
+                this.data.data[i+3]+=parseInt(color[3]);
             }               
         }
     }
-    return this.save_data;
+    this.stopAnimate();
 }
 //输出 JPEG 格式
 CanvasPs.prototype.save_jpg=function() {
@@ -318,4 +242,7 @@ CanvasPs.prototype.img_cut=function(x,y,w,h) {
     this.c.width=w;
     this.c.height=h;
     this.ct.putImageData(temp_data,0,0);
+}
+CanvasPs.prototype.mouseup=function(){
+    
 }
