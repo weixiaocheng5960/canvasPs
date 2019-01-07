@@ -84,10 +84,10 @@ function CanvasPs(c){
         }
         //确定裁剪
         this.config.elements.cutBox.ondblclick=function(){
-            var rx=this.offsetLeft/(scale/100)-parseInt(canvasps.c.style.left);
-            var ry=this.offsetTop/(scale/100)-parseInt(canvasps.c.style.top);
-            var rw=this.offsetWidth/(scale/100);
-            var rh=this.offsetHeight/(scale/100);
+            var rx=this.offsetLeft/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.left);
+            var ry=this.offsetTop/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.top);
+            var rw=this.offsetWidth/(canvasps.config.canvas.scale/100);
+            var rh=this.offsetHeight/(canvasps.config.canvas.scale/100);
             canvasps.imgCutting(rx,ry,rw,rh,canvasps);
             canvasps.scaleCanvas(canvasps.config.canvas.scale,canvasps);
             canvasps.upData();
@@ -163,7 +163,7 @@ function CanvasPs(c){
         }
     }
     this.c.ondblclick = function (e) {
-        ps.wand(e.offsetX / (scale / 100), e.offsetY / (scale / 100));
+        ps.wand(e.offsetX / (canvasps.config.canvas.scale / 100), e.offsetY / (canvasps.config.canvas.scale / 100));
     }
     this.upData();
 }
@@ -173,13 +173,10 @@ CanvasPs.prototype.ready=function(){
     this.c.style.height=null;
     this.c.style.left=0;
     this.c.style.top=0;
-    this.w = c.width;
-    this.h = c.height;
-    this.data=this.ct.getImageData(0,0,this.w,this.h);
-    this.n_data = this.ct.getImageData(0, 0, this.w, this.h);
-    this.o_data = this.ct.getImageData(0, 0, this.w, this.h);
+    this.data=this.ct.getImageData(0,0,this.c.width,this.c.height);
+    this.n_data = this.ct.getImageData(0, 0, this.c.width, this.c.height);
+    this.o_data = this.ct.getImageData(0, 0, this.c.width, this.c.height);
     this.config.history[0].data=this.ct.getImageData(0,0,this.c.width,this.c.height);
-    
 }
 //设置模式
 CanvasPs.prototype.setMode=function(mode){
@@ -213,6 +210,9 @@ CanvasPs.prototype.getHistory=function(){
 }
 //历史跳转
 CanvasPs.prototype.goto=function(index){
+    if (!this.config.history[index]) {
+        return;
+    }
     this.data = this.config.history[index].data;
     this.c.width=this.data.width;
     this.c.height=this.data.height;
@@ -222,7 +222,7 @@ CanvasPs.prototype.goto=function(index){
 //添加历史
 CanvasPs.prototype.addHistory=function(historyData){
     this.config.history.push(historyData);
-    if(this.config.history.length>10){
+    if(this.config.history.length>16){
         this.config.history.shift();
     }
 }
@@ -230,20 +230,9 @@ CanvasPs.prototype.addHistory=function(historyData){
 CanvasPs.prototype.setColor=function(color){
     this.config.pen.color=color;
 }
-//打开文件
-CanvasPs.prototype.open=function(filename){
-    if (typeof filename!=='string') {
-        console.log('请查看URL是否正确');
-        return;
-    }
-    this.img=new Image();
-    this.img.src=filename;
-    var CanvasPs=this;
-    this.img.onload=function() {
-        CanvasPs.loadImg();
-        CanvasPs.ready();
-        CanvasPs=null;
-    }
+// 设置画笔大小
+CanvasPs.prototype.setWidth = function (size) {
+    this.config.pen.size = size;
 }
 //打开图片img对象
 CanvasPs.prototype.openFile=function(file){
@@ -253,11 +242,11 @@ CanvasPs.prototype.openFile=function(file){
     }catch(e){
         console.log('必须是input的file对象！')
     }
-    var CanvasPs=this;
+    var canvasps=this;
     this.img.onload=function() {
-        CanvasPs.loadImg();
-        CanvasPs.ready();
-        CanvasPs=null;
+        canvasps.loadImg();
+        canvasps.ready();
+        canvasps=null;
     }
 }
 //加载图片
@@ -291,14 +280,15 @@ CanvasPs.prototype.select_data=function(dd){
 }
 //设置选区---魔术棒工具--默认只选择 闭合区间
 CanvasPs.prototype.wand=function(sx,sy,all){
-    this.o_data = ct.getImageData(0, 0, this.w, this.h);
-    var dat = ct.getImageData(sx, sy, 1, 1);//采集数据
+    this.stopAnimate();
+    this.o_data = this.ct.getImageData(0, 0, this.c.width, this.c.height);
+    var dat = this.ct.getImageData(sx, sy, 1, 1);//采集数据
     if (this.select_data(dat)) {
         return [];
     } else {
         this.sample = dat;
     }
-    this.n_data = ct.getImageData(0, 0, this.c.width, this.c.height);
+    this.n_data = this.ct.getImageData(0, 0, this.c.width, this.c.height);
     for (var i = 0; i < this.data.data.length; i += 4) {
         //选择区
         if (Math.abs(this.n_data.data[i] - dat.data[0]) <= this.alw && Math.abs(this.n_data.data[i + 1] - dat.data[1]) <= this.alw && Math.abs(this.n_data.data[i + 2] - dat.data[2]) <= this.alw && Math.abs(this.n_data.data[i + 3] - dat.data[3]) <= this.alw) {
@@ -354,6 +344,13 @@ CanvasPs.prototype.stopAnimate = function () {
 CanvasPs.prototype.setAlw=function(a){
     this.alw=a;
 }
+//重置画布
+CanvasPs.prototype.reMake = function (a) {
+    this.data=this.o_data;
+    this.config.history=[];
+    this.addHistory({title:'开始',data:this.data});
+    this.goto(0);
+}
 //缩放画布
 CanvasPs.prototype.scaleCanvas=function(size,ps){
     var cw=c.width;
@@ -374,7 +371,7 @@ CanvasPs.prototype.clearSelect=function(){
     }
     this.stopAnimate();
     this.upData();
-    this.addHistory({title:'删除选区',data:this.data})
+    this.addHistory({title:'删除',data:this.data})
     var dat=this.sample;
     for (var i = 0; i < this.data.data.length; i+=4) {
 	    //选择区

@@ -1,15 +1,6 @@
 document.body.onselectstart=function(){return false}
-//变量申明
-var scale=100;//缩放
-var c_p=[0,0];//画布位置
-var pen=false;//画笔模式
-var clear_pen=false;//橡皮擦模式
-var cutting=false;//开启裁剪
-var mouse_posi=[0,0];//鼠标事件初始位置
-var cut_mouse=[0,0];//裁剪专用鼠标数据;
 //打开文件
 var input = document.createElement('input');
-var img = document.createElement('img');
 input.type = "file";
 document.querySelectorAll('.menubtn')[0].onclick=function(){
     input.click();
@@ -20,9 +11,6 @@ input.onchange=function () {
     }
     
 }
-img.onload=function(){
-    init();
-}
 //初始化 数据
 function init() {
     
@@ -30,9 +18,9 @@ function init() {
     document.querySelectorAll(".menu>input")[2].value="#000000";
     document.querySelectorAll(".menu>input")[1].value=10;
     document.querySelectorAll(".menu>input")[0].value=0;
-    ps.ready();
+    // ps.ready();
 }
-//测试图形---------欢迎 界面
+//测试图形------
 function draw_test() {
     // 方块
     ct.fillStyle = '#F96652';
@@ -68,7 +56,7 @@ function draw_test() {
     ct.fillText("在线抠图工具,简单方便 by-jianghong",c.width/5,c.height-50);
     ps.ready();
 }
-draw_test();
+// draw_test();
 //默认设置------s
 document.oncontextmenu = function(){
     return false;
@@ -79,23 +67,7 @@ for(var i=0;i<side_element.length;i++){
 }
 //默认设置------e
 
-//获取 裁剪矩形位置 函数
-function get_rect_pos(x,y) {
-    if (mouse_posi[0]<x) {
-            if (mouse_posi[1]<y) {
-                return;
-            }else{
-                cut_mouse[1]-=mouse_posi[1]-y;
-            }
-        }else{
-            if (mouse_posi[1]<y) {
-                cut_mouse[0]-=Math.abs(mouse_posi[0]-x);
-            }else{
-                cut_mouse[0]-=Math.abs(mouse_posi[0]-x);
-                cut_mouse[1]-=Math.abs(mouse_posi[1]-y);
-            }
-        }
-}
+
 //鼠标滚动缩放
 c.onwheel=function(e) {
     e.preventDefault();
@@ -125,6 +97,11 @@ document.querySelectorAll('.menu>input')[0].onchange = function () {
     ps.setAlw(this.value);
     this.title = this.value;
 }
+//画笔大小
+document.querySelectorAll('.menu>input')[1].onchange = function () {
+    ps.setWidth(this.value);
+    this.title = this.value;
+}
 //画笔颜色
 document.querySelectorAll('.menu>input')[2].onchange = function () {
     ps.setColor(this.value);
@@ -136,31 +113,22 @@ document.onkeydown=function(e){
     if (e.keyCode==32) {
         e.preventDefault();
         c.style.cursor="move";
-        space=true;
-        clearInterval(st);
+        ps.setMode(6);
     }
 }
 document.onkeyup=function(e){
     if (e.keyCode==32) {
         c.style.cursor="default";
-        space=false;
+        ps.setMode(0);
     }
 }
-//移动画布
-function move_c(x,y){
-    if (space&&x!=c_p[0]&&y!=c_p[1]) {
-        c.style.left=x+"px";
-        c.style.top=y+"px";
-        // console.log(x,y)
-    }
-}
-
+//缩放画布
 document.querySelectorAll('.menu>input')[3].onchange=function() {
     ps.scaleCanvas(this.value);
 }
-//重置画布位置
+//重置画布
 document.querySelectorAll('.menubtn')[7].onclick=function() {
-    ps.moveCanvas(0,0);
+    ps.reMake();
 }
 //删除选区
 document.querySelectorAll('.menubtn')[3].onclick=function() {

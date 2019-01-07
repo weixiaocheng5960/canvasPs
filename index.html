@@ -19,7 +19,7 @@
             <span class='menubtn' href="javascript:;" title="色彩平衡"><img width="30%" src="imgs/Color.png" alt=""></span>
             <span class='menubtn' href="javascript:;" class="none_btn" title="裁剪"><img width="35%" src="imgs/clipping.png" alt=""></span>
             <span class='menubtn' href="javascript:;" title="按住空格,鼠标移动画布"><img width="35%" src="imgs/move.svg" alt=""></span>
-            <span class='menubtn' href="javascript:;" title="重置画布位置"><img width="35%" src="imgs/Restore.png" alt=""></span>
+            <span class='menubtn' href="javascript:;" title="重置画布"><img width="35%" src="imgs/Restore.png" alt=""></span>
             <span class='menubtn' href="javascript:;" title="画笔"><img width="25%" src="imgs/paintbrush.svg" alt=""></span>
             <span class='menubtn' href="javascript:;" title="擦除"><img width="50%" src="imgs/eraser.svg" alt=""></span>
              <!-- 帮助 -->
@@ -101,9 +101,7 @@
         var ct = c.getContext('2d');
         //创建PS对象
         var ps=new CanvasPs(c);
-        ps.open(11);
-        ps.getImg()
-        // document.querySelector('#test').appendChild(ps.getImg())
+        // ps.open("1.jpg");
     </script>
     <script src="ps/main.js"></script>
 </body>
