@@ -57,11 +57,18 @@ function CanvasPs(c){
         elements:{
             cutBox:document.createElement('div'),
         },
+        history:[
+            {
+                title:'开始',
+                data:this.ct.getImageData(0,0,this.c.width,this.c.height),
+            }
+        ],//最大10
 
     }
     //裁剪框
     if(document.querySelectorAll('.canvas-ps-warp').length>0){
         this.config.elements.cutBox.className='pscut-box';
+        this.config.elements.cutBox.title='双击确定';
         document.querySelectorAll('.canvas-ps-warp')[0].appendChild(this.config.elements.cutBox); 
         this.config.elements.cutBox.onmouseup=function(e){
             canvasps.config.mouse.status=1;
@@ -69,11 +76,27 @@ function CanvasPs(c){
         }
         this.config.elements.cutBox.onmousedown=function(e){
             canvasps.config.mouse.cutBox.status=0;
-            canvasps.config.mouse.cutBox.down.x=e.offsetX-this.offsetLeft;
-            canvasps.config.mouse.cutBox.down.y=e.offsetY-this.offsetTop;
+            canvasps.config.mouse.cutBox.down.x=e.pageX-this.offsetLeft;
+            canvasps.config.mouse.cutBox.down.y=e.pageY-this.offsetTop;
         }
         this.config.elements.cutBox.onmousemove=function(e){
-            canvasps.mouseWork.moveCuttingBox(e.offsetX,e.offsetY,canvasps);
+            canvasps.mouseWork.moveCuttingBox(e.pageX-canvasps.config.mouse.cutBox.down.x,e.pageY-canvasps.config.mouse.cutBox.down.y,canvasps);
+        }
+        //确定裁剪
+        this.config.elements.cutBox.ondblclick=function(){
+            var rx=this.offsetLeft/(scale/100)-parseInt(canvasps.c.style.left);
+            var ry=this.offsetTop/(scale/100)-parseInt(canvasps.c.style.top);
+            var rw=this.offsetWidth/(scale/100);
+            var rh=this.offsetHeight/(scale/100);
+            canvasps.imgCutting(rx,ry,rw,rh,canvasps);
+            canvasps.scaleCanvas(canvasps.config.canvas.scale,canvasps);
+            canvasps.upData();
+            canvasps.addHistory({title:'裁剪',data:canvasps.data})
+            //恢复裁剪框
+            canvasps.config.elements.cutBox.style.left='-20px';
+            canvasps.config.elements.cutBox.style.width='0';
+            canvasps.config.elements.cutBox.style.height='0';
+            canvasps.config.elements.cutBox.style.display='none';
         }
     }else{
         console.log('必须在 canvas-ps-warp 类名下直接子元素 与canvas同级的块元素才可正常使用裁剪');
@@ -89,14 +112,32 @@ function CanvasPs(c){
         canvasps.config.canvas.y=e.pageY-this.offsetTop;
         canvasps.config.mouse.down.x=e.pageX-80;
         canvasps.config.mouse.down.y=e.pageY;
-        //绘制 开始
-        // if (cutting) {
-        //     cut_mouse[0]=e.layerX;
-        //     cut_mouse[1]=e.layerY;
-        // }
     }
     this.c.onmouseup = function (e) {
         canvasps.config.mouse.status=1;
+        canvasps.config.mouse.cutBox.status=1;
+        switch(canvasps.config.mode){
+            case 0:
+            break;
+            case 1:
+            break;
+            case 2:
+            canvasps.upData();
+            canvasps.addHistory({title:'画笔',data:canvasps.data})
+            break;
+            case 3:
+            canvasps.upData();
+            canvasps.addHistory({title:'擦除',data:canvasps.data})
+            break;
+            case 4:
+            
+            case 5:
+            
+            break;
+            case 6:
+            
+            break;
+        }
     }
     this.c.onmousemove = function (e) {
         switch(canvasps.config.mode){
@@ -111,13 +152,20 @@ function CanvasPs(c){
             canvasps.mouseWork.clear(e.layerX,e.layerY,canvasps);
             break;
             case 4:
-            canvasps.mouseWork.cutting(e.layerX,e.layerY,canvasps);
+            canvasps.mouseWork.cutting(e.layerX+parseInt(canvasps.c.style.left),e.layerY+parseInt(canvasps.c.style.top),canvasps);
+            break;
+            case 5:
+            // canvasps.mouseWork.cutting(e.layerX,e.layerY,canvasps);
+            break;
+            case 6:
+            canvasps.mouseWork.moveCanvas(e.pageX-canvasps.config.canvas.x,e.pageY-canvasps.config.canvas.y,canvasps);
             break;
         }
     }
     this.c.ondblclick = function (e) {
         ps.wand(e.offsetX / (scale / 100), e.offsetY / (scale / 100));
     }
+    this.upData();
 }
 //初始化
 CanvasPs.prototype.ready=function(){
@@ -130,6 +178,7 @@ CanvasPs.prototype.ready=function(){
     this.data=this.ct.getImageData(0,0,this.w,this.h);
     this.n_data = this.ct.getImageData(0, 0, this.w, this.h);
     this.o_data = this.ct.getImageData(0, 0, this.w, this.h);
+    this.config.history[0].data=this.ct.getImageData(0,0,this.c.width,this.c.height);
     
 }
 //设置模式
@@ -137,8 +186,12 @@ CanvasPs.prototype.setMode=function(mode){
     this.config.mode=mode;
     switch(mode){
         case 4:
+        this.c.style.cursor="crosshair";
         this.config.elements.cutBox.style.display='block';
         break;
+        case 6:
+        this.c.style.cursor="move";
+        break
     }
     if(mode!=4){
         this.config.elements.cutBox.style.left='-20px';
@@ -146,10 +199,36 @@ CanvasPs.prototype.setMode=function(mode){
         this.config.elements.cutBox.style.height='0';
         this.config.elements.cutBox.style.display='none';
     }
+    if(mode!=6||mode!=4){
+        this.c.style.cursor="default";
+    }
 }
 //获取模式
 CanvasPs.prototype.getMode=function(){
     return this.config.mode;
+}
+// 获取操作历史
+CanvasPs.prototype.getHistory=function(){
+    return this.config.history;
+}
+//历史跳转
+CanvasPs.prototype.goto=function(index){
+    this.data = this.config.history[index].data;
+    this.c.width=this.data.width;
+    this.c.height=this.data.height;
+    this.ct.putImageData(this.data,0,0);
+    this.scaleCanvas(this.config.canvas.scale,this);
+}
+//添加历史
+CanvasPs.prototype.addHistory=function(historyData){
+    this.config.history.push(historyData);
+    if(this.config.history.length>10){
+        this.config.history.shift();
+    }
+}
+// 设置画笔颜色
+CanvasPs.prototype.setColor=function(color){
+    this.config.pen.color=color;
 }
 //打开文件
 CanvasPs.prototype.open=function(filename){
@@ -187,6 +266,7 @@ CanvasPs.prototype.loadImg=function(){
     this.c.width=this.img.naturalWidth;
     this.c.height=this.img.naturalHeight;
     this.ct.drawImage(this.img,0,0);
+    this.upData();
 }
 //获取原始图片
 CanvasPs.prototype.getImg=function(){
@@ -218,7 +298,7 @@ CanvasPs.prototype.wand=function(sx,sy,all){
     } else {
         this.sample = dat;
     }
-    this.n_data = ct.getImageData(0, 0, this.w, this.h);
+    this.n_data = ct.getImageData(0, 0, this.c.width, this.c.height);
     for (var i = 0; i < this.data.data.length; i += 4) {
         //选择区
         if (Math.abs(this.n_data.data[i] - dat.data[0]) <= this.alw && Math.abs(this.n_data.data[i + 1] - dat.data[1]) <= this.alw && Math.abs(this.n_data.data[i + 2] - dat.data[2]) <= this.alw && Math.abs(this.n_data.data[i + 3] - dat.data[3]) <= this.alw) {
@@ -274,12 +354,27 @@ CanvasPs.prototype.stopAnimate = function () {
 CanvasPs.prototype.setAlw=function(a){
     this.alw=a;
 }
-
+//缩放画布
+CanvasPs.prototype.scaleCanvas=function(size,ps){
+    var cw=c.width;
+    var ch=c.height;
+    if(this.config.canvas.scale){
+        this.config.canvas.scale=size;
+    }else if(ps){
+        ps.config.canvas.scale=size;
+    }
+    c.style.width=cw*(size/100)+"px";
+    c.style.height=ch*(size/100)+"px";
+}
 //删除选区
 CanvasPs.prototype.clearSelect=function(){
+    
     if(!this.select){
         return;
     }
+    this.stopAnimate();
+    this.upData();
+    this.addHistory({title:'删除选区',data:this.data})
     var dat=this.sample;
     for (var i = 0; i < this.data.data.length; i+=4) {
 	    //选择区
@@ -290,13 +385,26 @@ CanvasPs.prototype.clearSelect=function(){
 			this.data.data[i+3]=0;					
 		}
     }
-    this.stopAnimate();
+    this.ct.putImageData(this.data,0,0);
+}
+//更新标准data数据
+CanvasPs.prototype.upData=function(ps){
+    if(ps){
+        ps.data=ps.ct.getImageData(0,0,ps.c.width,ps.c.height);
+        ps.ct.putImageData(ps.data,0,0);
+    }else if(this.data){
+        this.data=this.ct.getImageData(0,0,this.c.width,this.c.height);
+        this.ct.putImageData(this.data,0,0);
+    }
 }
 //调节颜色
 CanvasPs.prototype.colorControl = function(color) {
     if (!this.select) {
         return;
     }
+    this.stopAnimate();
+    this.upData();
+    this.addHistory({title:'调色',data:this.data})
     var dat=this.sample;
     for (var i = 0; i < this.data.data.length; i+=4) {
         //选择区
@@ -331,7 +439,7 @@ CanvasPs.prototype.colorControl = function(color) {
             }               
         }
     }
-    this.stopAnimate();
+    this.ct.putImageData(this.data,0,0);
 }
 //输出 JPEG 格式
 CanvasPs.prototype.save_jpg=function() {
@@ -348,12 +456,18 @@ CanvasPs.prototype.save_jpg=function() {
     return img_data;
 }
 //裁剪 ----图片
-CanvasPs.prototype.img_cut=function(x,y,w,h) {
-    var temp_data=this.ct.getImageData(x,y,w,h);
-    this.c.width=w;
-    this.c.height=h;
-    this.ct.putImageData(temp_data,0,0);
+CanvasPs.prototype.imgCutting=function(x,y,w,h,ps) {
+    ps.data=ps.ct.getImageData(x,y,w,h);
+    ps.c.width=w;
+    ps.c.height=h;
+    ps.ct.putImageData(ps.data,0,0);
 }
+//移动画布
+CanvasPs.prototype.moveCanvas=function(x,y){
+    this.c.style.left=x+"px";
+    this.c.style.top=y+"px";
+}
+// 鼠标交互操作
 CanvasPs.prototype.mouseWork=({
     //涂鸦
     draw:function(x,y,ps){
@@ -368,7 +482,7 @@ CanvasPs.prototype.mouseWork=({
             ps.ct.clearRect(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100),ps.config.pen.size,ps.config.pen.size);
         }
     },
-    //裁剪
+    //裁剪过程
     cutting:function(x,y,ps){
         if (ps.config.mouse.status==0) {
             var ww=Math.abs(ps.config.mouse.down.x-x);
@@ -403,8 +517,19 @@ CanvasPs.prototype.mouseWork=({
     // 移动裁剪框
     moveCuttingBox:function(x,y,ps){
         if(ps.config.mouse.cutBox.status==0){
-            ps.config.elements.cutBox.style.left=(x-ps.config.mouse.cutBox.down.x)+'px';
-            ps.config.elements.cutBox.style.top=(y-ps.config.mouse.cutBox.down.y)+'px';
+            if(x+ps.config.elements.cutBox.offsetWidth<=ps.c.offsetWidth && x>=0){
+                ps.config.elements.cutBox.style.left=x+'px';
+                
+            }
+            if(y+ps.config.elements.cutBox.offsetHeight<=ps.c.offsetHeight && y>=0){
+                ps.config.elements.cutBox.style.top=y+'px';
+            }
+        }
+    },
+    moveCanvas:function(x,y){
+        if (ps.config.mouse.status==0) {
+            ps.c.style.left=x+"px";
+            ps.c.style.top=y+"px";
         }
     },
 })

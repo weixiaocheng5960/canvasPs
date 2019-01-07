@@ -78,80 +78,7 @@ for(var i=0;i<side_element.length;i++){
     // side_element[i].focus();
 }
 //默认设置------e
-//鼠标交互
-var ps_d=null;
-var olddt,dt;//数据
-var st=null;//选择效果
-var m_down=false;//是否按钮鼠标
-var data_img=document.createElement('img');//复制数据用
-var data_m=null;//获取数据的位置
-// c.ondblclick=function(e) {
-//     ps.wand(e.offsetX / (scale / 100), e.offsetY / (scale / 100));
-// }
-// c.onmousedown = function (e) {
-//     e.preventDefault();
-//     m_down=true;
-//     c_p[0]=e.pageX-c.offsetLeft;
-//     c_p[1]=e.pageY-c.offsetTop;
-//     mouse_posi[0]=e.pageX-80;
-//     mouse_posi[1]=e.pageY;
-//     //绘制 开始
-//     if (cutting) {
-//         cut_mouse[0]=e.layerX;
-//         cut_mouse[1]=e.layerY;
-//     }
-// }
-// c.onmouseup = function (e) {
-//     m_down=false;
-//     //绘制 结束
-//     if (pen||clear_pen) {
-//         // ps.ready();//更新PS类
-//     }
 
-// }
-// c.onmousemove=function(e) {
-//     if (m_down&&space) {
-//         //移动----------
-//         move_c(e.pageX-c_p[0],e.pageY-c_p[1]);//移动画布
-//     }if (m_down&&!space) {
-//         //执行区-----绘制-----
-//         draw_pen(e.layerX,e.layerY);//画笔 涂鸦
-//         draw_cuting(e.pageX-80,e.pageY);//裁剪
-//         clear_canvas(e.layerX,e.layerY);// 擦除
-//     }
-// }
-//裁剪专区
-// var warp=document.querySelector(".canvas-ps-warp");
-
-// warp.onmousedown=function(e) {
-//     if (cutting&&!space) {
-//         draw_cuting(e.pageX-80,e.pageY);//裁剪
-//         cut_box.style.width=0+"px";
-//         cut_box.style.height=0+"px";
-//         cut_box.style.display="block";
-//     }
-// }
-// warp.onmouseup=function(e) {
-//     m_down=false;
-//     if (cutting&&!space) {
-//         show_def_window(true,function() {
-//             get_rect_pos(e.pageX-80,e.pageY);//重新计算裁剪点位置
-//             var rx=cut_mouse[0]/(scale/100);
-//             var ry=cut_mouse[1]/(scale/100);
-//             var rw=cut_box.offsetWidth/(scale/100);
-//             var rh=cut_box.offsetHeight/(scale/100);
-//             //提交信息----区域必须大于10x10
-//             if (rw>=10||rh>=10) {
-//                 ps.img_cut(rx,ry,rw,rh);
-//                 scale_c(scale);
-//             }
-//             show_def_window(false);//完成后关闭窗口----
-//             cut_box.style.display="none";
-//             document.querySelectorAll('.menubtn')[7].click();//重置画布位置
-//         },"确定要裁剪吗?目前不可逆的哦!");//裁剪
-
-//     }
-// }
 //获取 裁剪矩形位置 函数
 function get_rect_pos(x,y) {
     if (mouse_posi[0]<x) {
@@ -187,76 +114,20 @@ c.onwheel=function(e) {
         }
     }
     scale=input_sc.value
-    scale_c(scale);
-}
-//画笔 涂鸦
-function draw_pen(x,y) {
-    if (pen) {
-        var color=document.querySelectorAll('.menu>input')[2].value;
-        var size=document.querySelectorAll('.menu>input')[1].value;
-        ct.fillStyle=color;
-        ct.fillRect(x/(scale/100),y/(scale/100),size,size);
-    }
-}
-//开始 裁剪---绘制裁剪过程
-var cut_box=document.querySelector(".cut_box");
-function draw_cuting(x,y) {
-    var ww=Math.abs(mouse_posi[0]-x);
-    var hh=Math.abs(mouse_posi[1]-y);
-    if (cutting) {
-        if (mouse_posi[0]<x) {
-            if (mouse_posi[1]<y) {
-                cut_box.style.left=mouse_posi[0]+"px";
-                cut_box.style.top=mouse_posi[1]+"px";
-                cut_box.style.width=ww+"px";
-                cut_box.style.height=hh+"px";
-            }else{
-                cut_box.style.left=mouse_posi[0]+"px";
-                cut_box.style.top=y+"px";
-                cut_box.style.width=ww+"px";
-                cut_box.style.height=hh+"px";
-            }
-        }else{
-            if (mouse_posi[1]<y) {
-                cut_box.style.left=x+"px";
-                cut_box.style.top=mouse_posi[1]+"px";
-                cut_box.style.width=ww+"px";
-                cut_box.style.height=hh+"px";
-            }else{
-                cut_box.style.left=x+"px";
-                cut_box.style.top=y+"px";
-                cut_box.style.width=ww+"px";
-                cut_box.style.height=hh+"px";
-            }
-        }
-    }
-}
-//橡皮擦 擦除
-function clear_canvas(x,y) {
-    if (clear_pen) {
-        var size=document.querySelectorAll('.menu>input')[1].value;
-        ct.clearRect(x/(scale/100),y/(scale/100),size,size);
-    }
-}
-//获取选区
-var toggle=false;
-function selected() {
-    if (toggle) {
-        ct.putImageData(olddt, 0, 0);
-        toggle = false;
-    } else {
-        ct.putImageData(dt, 0, 0);
-        toggle = true;
-    }
+    ps.scaleCanvas(scale);
 }
 //取消选择
 document.querySelectorAll('.menubtn')[2].onclick = function () {
-    // select_null();
     ps.stopAnimate()
 }
 //设置容差
 document.querySelectorAll('.menu>input')[0].onchange = function () {
     ps.setAlw(this.value);
+    this.title = this.value;
+}
+//画笔颜色
+document.querySelectorAll('.menu>input')[2].onchange = function () {
+    ps.setColor(this.value);
     this.title = this.value;
 }
 //空格监控
@@ -283,33 +154,13 @@ function move_c(x,y){
         // console.log(x,y)
     }
 }
-//缩放画布
-var cw,ch;
-function scale_c(size) {
-    cw=c.width;
-    ch=c.height;
-    scale=size;
-    c.style.width=cw*(size/100)+"px";
-    c.style.height=ch*(size/100)+"px";
-    // console.log(c.offsetWidth,ch)
-    ps.config.canvas.scale=size;
-}
-document.querySelectorAll('.menu>input')[3].onchange=function() {
-    scale_c(this.value);
-}
 
-//取消选择 函数
-function select_null(){
-    clearInterval(st);
-    if (olddt) {
-        ct.putImageData(olddt, 0, 0);
-        ps.set_s_none();
-    }
+document.querySelectorAll('.menu>input')[3].onchange=function() {
+    ps.scaleCanvas(this.value);
 }
 //重置画布位置
 document.querySelectorAll('.menubtn')[7].onclick=function() {
-    c.style.left="0px";
-    c.style.top="0px";
+    ps.moveCanvas(0,0);
 }
 //删除选区
 document.querySelectorAll('.menubtn')[3].onclick=function() {
@@ -332,9 +183,22 @@ document.querySelectorAll('.menubtn')[5].onclick=function() {
         ps.setMode(0);
         this.style.backgroundColor=null;
         c.style.cursor="default";
-    }else if(!clear_pen&&!pen){
+    }else{
         ps.setMode(4);
         c.style.cursor="crosshair";
+        clearMenuStyle();
+        this.style.backgroundColor="#B2B2B2";
+    }
+}
+//开启 移动
+document.querySelectorAll('.menubtn')[6].onclick=function() {
+    if (ps.getMode()==6) {
+        ps.setMode(0);
+        this.style.backgroundColor=null;
+        c.style.cursor="default";
+    }else{
+        ps.setMode(6);
+        c.style.cursor="move";
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
     }
@@ -350,6 +214,24 @@ document.querySelectorAll('.menubtn')[9].onclick=function() {
         this.style.backgroundColor="#B2B2B2";
     }
 }
+//画布跳转指定历史
+function canvaspsGo(index){
+    ps.goto(index);
+}
+//刷新操作历史
+function refreshHistory(){
+    var history=ps.getHistory();
+    var historybox=document.querySelector('.history>div');
+    historybox.innerHTML=null;
+    for(var i=0;i<history.length;i++){
+        var ea=document.createElement('a');
+        ea.innerHTML=history[i].title;
+        ea.href='javascript:canvaspsGo('+i+');'
+        ea.setAttribute('data-index',i);
+        historybox.appendChild(ea);
+    }
+}
+
 //清楚菜单样式
 function clearMenuStyle(){
     var menubtn=document.querySelectorAll('.menubtn');
@@ -509,7 +391,6 @@ document.querySelector(".default>h4>span").onclick=function () {
     show_def_window(false);
 }
 document.querySelectorAll(".default_btn>a")[0].onclick=function () {
-    cut_box.style.display="none";
     show_def_window(false);
 }
 

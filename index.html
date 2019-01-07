@@ -45,6 +45,11 @@
         <div class="work">
             <div class="canvas-ps-warp">
                 <canvas id="canvas" width="800" height="600" >不支持canvas</canvas>
+                <div class="history">
+                    <h4 onclick="refreshHistory();" title="点击刷新历史">&nbsp;操作历史&nbsp;</h4>
+                    <div>
+                    </div>
+                </div>
             </div>
             <!-- 调节层 -->
             <div class="alert">
@@ -64,7 +69,7 @@
                 </div>
                 <!-- 保存窗口 -->
                 <div class="save windows">
-                    <h4>&nbsp;选择保存类型<span>x</span></h4>
+                    <h4>&nbsp;选择保存类型<span>&times;</span></h4>
                     <div class="contr_save">
                         <h5 class="contr_save_type">类型: <span title="常用格式,可压缩">JPEG<input name="image" type="radio" checked="checked"></span>
                             <span title="带透明通道">PNG<input name="image" type="radio" checked="checked"></span><span title="window常用图片">BMP<input name="image" type="radio"></span></h5>

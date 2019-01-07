@@ -149,3 +149,26 @@
     cursor: move;
     background-color:rgba(0, 0, 0, 0.4);
 }
+/* 操作历史 */
+.history{
+    position: absolute;
+    z-index: 10;
+    right: 0;
+    padding: 8px 4px;
+    border: solid 2px #acacac;
+    color: #5B5B5B;
+    text-align: center;
+}
+.history h4{
+    background-color: rgb(199, 199, 199);
+    
+    padding: 4px 0;
+}
+.history a{
+    display: block;
+    padding: 8px 20px;
+    border: solid 1px #c0c0c0;
+    font-size: 12px;
+    color: #5B5B5B;
+    text-decoration: none;
+}
