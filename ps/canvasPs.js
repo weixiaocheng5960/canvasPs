@@ -1,5 +1,6 @@
 //抠图 js 类-----基于canvas
 function CanvasPs(c){
+    var canvasps=this;//
     this.c=c;//canvas
     this.ct=c.getContext('2d');
     this.n_data=null;//新数据
@@ -9,22 +10,113 @@ function CanvasPs(c){
     this.animation=null;//选区视效
     this.sample=null;//采样点
     this.select=false;//选择状态
-    this.mode=0;//0-正常 1-画笔 2-橡皮擦 3-裁剪 4-调色 5-移动画布 6-缩放画布
+    this.config={
+        mode:0,//0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色 6-移动画布 7-缩放画布 
+        pen:{
+            color:'red',
+            size:10,
+            status:0,
+        },
+        canvas:{
+            scale:100,
+            show:true,
+            backgruond:'none',
+            x:this.c.offsetX,
+            y:this.c.offsetY,
+        },
+        mouse:{
+            status:1,//0-按下 1-松开 2-移动
+            down:{
+                x:0,
+                y:0,
+            },
+            up:{
+                x:0,
+                y:0,
+            },
+            move:{
+                x:0,
+                y:0,
+            },
+            cutBox:{
+                status:1,//0-按下 1-松开 2-移动
+                down:{
+                    x:0,
+                    y:0,
+                },
+                up:{
+                    x:0,
+                    y:0,
+                },
+                move:{
+                    x:0,
+                    y:0,
+                },
+            },
+        },
+        elements:{
+            cutBox:document.createElement('div'),
+        },
+
+    }
+    //裁剪框
+    if(document.querySelectorAll('.canvas-ps-warp').length>0){
+        this.config.elements.cutBox.className='pscut-box';
+        document.querySelectorAll('.canvas-ps-warp')[0].appendChild(this.config.elements.cutBox); 
+        this.config.elements.cutBox.onmouseup=function(e){
+            canvasps.config.mouse.status=1;
+            canvasps.config.mouse.cutBox.status=1;
+        }
+        this.config.elements.cutBox.onmousedown=function(e){
+            canvasps.config.mouse.cutBox.status=0;
+            canvasps.config.mouse.cutBox.down.x=e.offsetX-this.offsetLeft;
+            canvasps.config.mouse.cutBox.down.y=e.offsetY-this.offsetTop;
+        }
+        this.config.elements.cutBox.onmousemove=function(e){
+            canvasps.mouseWork.moveCuttingBox(e.offsetX,e.offsetY,canvasps);
+        }
+    }else{
+        console.log('必须在 canvas-ps-warp 类名下直接子元素 与canvas同级的块元素才可正常使用裁剪');
+    }
     if(c==null){
         return;
     }
     //鼠标交互
     this.c.onmousedown = function (e) {
-
+        e.preventDefault();
+        canvasps.config.mouse.status=0;
+        canvasps.config.canvas.x=e.pageX-this.offsetLeft;
+        canvasps.config.canvas.y=e.pageY-this.offsetTop;
+        canvasps.config.mouse.down.x=e.pageX-80;
+        canvasps.config.mouse.down.y=e.pageY;
+        //绘制 开始
+        // if (cutting) {
+        //     cut_mouse[0]=e.layerX;
+        //     cut_mouse[1]=e.layerY;
+        // }
     }
     this.c.onmouseup = function (e) {
-
+        canvasps.config.mouse.status=1;
     }
     this.c.onmousemove = function (e) {
-
+        switch(canvasps.config.mode){
+            case 0:
+            break;
+            case 1:
+            break;
+            case 2:
+            canvasps.mouseWork.draw(e.layerX,e.layerY,canvasps);
+            break;
+            case 3:
+            canvasps.mouseWork.clear(e.layerX,e.layerY,canvasps);
+            break;
+            case 4:
+            canvasps.mouseWork.cutting(e.layerX,e.layerY,canvasps);
+            break;
+        }
     }
     this.c.ondblclick = function (e) {
-        
+        ps.wand(e.offsetX / (scale / 100), e.offsetY / (scale / 100));
     }
 }
 //初始化
@@ -39,6 +131,25 @@ CanvasPs.prototype.ready=function(){
     this.n_data = this.ct.getImageData(0, 0, this.w, this.h);
     this.o_data = this.ct.getImageData(0, 0, this.w, this.h);
     
+}
+//设置模式
+CanvasPs.prototype.setMode=function(mode){
+    this.config.mode=mode;
+    switch(mode){
+        case 4:
+        this.config.elements.cutBox.style.display='block';
+        break;
+    }
+    if(mode!=4){
+        this.config.elements.cutBox.style.left='-20px';
+        this.config.elements.cutBox.style.width='0';
+        this.config.elements.cutBox.style.height='0';
+        this.config.elements.cutBox.style.display='none';
+    }
+}
+//获取模式
+CanvasPs.prototype.getMode=function(){
+    return this.config.mode;
 }
 //打开文件
 CanvasPs.prototype.open=function(filename){
@@ -243,6 +354,57 @@ CanvasPs.prototype.img_cut=function(x,y,w,h) {
     this.c.height=h;
     this.ct.putImageData(temp_data,0,0);
 }
-CanvasPs.prototype.mouseup=function(){
-    
-}
+CanvasPs.prototype.mouseWork=({
+    //涂鸦
+    draw:function(x,y,ps){
+        if (ps.config.mouse.status==0) {
+            ps.ct.fillStyle=ps.config.pen.color;
+            ps.ct.fillRect(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100),ps.config.pen.size,ps.config.pen.size);
+        }
+    },
+    //橡皮擦
+    clear:function(x,y,ps){
+        if (ps.config.mouse.status==0) {
+            ps.ct.clearRect(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100),ps.config.pen.size,ps.config.pen.size);
+        }
+    },
+    //裁剪
+    cutting:function(x,y,ps){
+        if (ps.config.mouse.status==0) {
+            var ww=Math.abs(ps.config.mouse.down.x-x);
+            var hh=Math.abs(ps.config.mouse.down.y-y);
+            if (ps.config.mouse.down.x<x) {
+                if (ps.config.mouse.down.y<y) {
+                    ps.config.elements.cutBox.style.left=ps.config.mouse.down.x+"px";
+                    ps.config.elements.cutBox.style.top=ps.config.mouse.down.y+"px";
+                    ps.config.elements.cutBox.style.width=ww+"px";
+                    ps.config.elements.cutBox.style.height=hh+"px";
+                }else{
+                    ps.config.elements.cutBox.style.left=ps.config.mouse.down.x+"px";
+                    ps.config.elements.cutBox.style.top=y+"px";
+                    ps.config.elements.cutBox.style.width=ww+"px";
+                    ps.config.elements.cutBox.style.height=hh+"px";
+                }
+            }else{
+                if (ps.config.mouse.down.y<y) {
+                    ps.config.elements.cutBox.style.left=x+"px";
+                    ps.config.elements.cutBox.style.top=ps.config.mouse.down.y+"px";
+                    ps.config.elements.cutBox.style.width=ww+"px";
+                    ps.config.elements.cutBox.style.height=hh+"px";
+                }else{
+                    ps.config.elements.cutBox.style.left=x+"px";
+                    ps.config.elements.cutBox.style.top=y+"px";
+                    ps.config.elements.cutBox.style.width=ww+"px";
+                    ps.config.elements.cutBox.style.height=hh+"px";
+                }
+            }
+        }
+    },
+    // 移动裁剪框
+    moveCuttingBox:function(x,y,ps){
+        if(ps.config.mouse.cutBox.status==0){
+            ps.config.elements.cutBox.style.left=(x-ps.config.mouse.cutBox.down.x)+'px';
+            ps.config.elements.cutBox.style.top=(y-ps.config.mouse.cutBox.down.y)+'px';
+        }
+    },
+})

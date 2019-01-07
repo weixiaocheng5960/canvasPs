@@ -1,6 +1,8 @@
 *{
     margin: 0;
     padding: 0;
+    user-select: none;
+    cursor: default;
 }
 .box{
     min-width: 800px;
@@ -96,8 +98,8 @@
     background-color: #767676;
     padding: 5px;
     border-radius: 4px;
-    margin-right: 14%;
-    margin-left: 14%;
+    margin-right: 5%;
+    margin-left: 5%;
 }
 .submit_color>a:hover{
     background-color: #555454;
@@ -139,9 +141,11 @@
     cursor: default;
 }
 /*裁剪显示框*/
-.cut_box{
+.pscut-box{
+    left: -20px;
     border: solid 2px red;
     position: absolute;
     display: none;
-    cursor: crosshair;
+    cursor: move;
+    background-color:rgba(0, 0, 0, 0.4);
 }

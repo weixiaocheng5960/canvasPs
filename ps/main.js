@@ -1,3 +1,4 @@
+document.body.onselectstart=function(){return false}
 //变量申明
 var scale=100;//缩放
 var c_p=[0,0];//画布位置
@@ -120,36 +121,37 @@ var data_m=null;//获取数据的位置
 //     }
 // }
 //裁剪专区
-var warp=document.querySelector(".warp");
-warp.onmousedown=function(e) {
-    if (cutting&&!space) {
-        draw_cuting(e.pageX-80,e.pageY);//裁剪
-        cut_box.style.width=0+"px";
-        cut_box.style.height=0+"px";
-        cut_box.style.display="block";
-    }
-}
-warp.onmouseup=function(e) {
-    m_down=false;
-    if (cutting&&!space) {
-        show_def_window(true,function() {
-            get_rect_pos(e.pageX-80,e.pageY);//重新计算裁剪点位置
-            var rx=cut_mouse[0]/(scale/100);
-            var ry=cut_mouse[1]/(scale/100);
-            var rw=cut_box.offsetWidth/(scale/100);
-            var rh=cut_box.offsetHeight/(scale/100);
-            //提交信息----区域必须大于10x10
-            if (rw>=10||rh>=10) {
-                ps.img_cut(rx,ry,rw,rh);
-                scale_c(scale);
-            }
-            show_def_window(false);//完成后关闭窗口----
-            cut_box.style.display="none";
-            document.querySelectorAll('.menubtn')[7].click();//重置画布位置
-        },"确定要裁剪吗?目前不可逆的哦!");//裁剪
+// var warp=document.querySelector(".canvas-ps-warp");
 
-    }
-}
+// warp.onmousedown=function(e) {
+//     if (cutting&&!space) {
+//         draw_cuting(e.pageX-80,e.pageY);//裁剪
+//         cut_box.style.width=0+"px";
+//         cut_box.style.height=0+"px";
+//         cut_box.style.display="block";
+//     }
+// }
+// warp.onmouseup=function(e) {
+//     m_down=false;
+//     if (cutting&&!space) {
+//         show_def_window(true,function() {
+//             get_rect_pos(e.pageX-80,e.pageY);//重新计算裁剪点位置
+//             var rx=cut_mouse[0]/(scale/100);
+//             var ry=cut_mouse[1]/(scale/100);
+//             var rw=cut_box.offsetWidth/(scale/100);
+//             var rh=cut_box.offsetHeight/(scale/100);
+//             //提交信息----区域必须大于10x10
+//             if (rw>=10||rh>=10) {
+//                 ps.img_cut(rx,ry,rw,rh);
+//                 scale_c(scale);
+//             }
+//             show_def_window(false);//完成后关闭窗口----
+//             cut_box.style.display="none";
+//             document.querySelectorAll('.menubtn')[7].click();//重置画布位置
+//         },"确定要裁剪吗?目前不可逆的哦!");//裁剪
+
+//     }
+// }
 //获取 裁剪矩形位置 函数
 function get_rect_pos(x,y) {
     if (mouse_posi[0]<x) {
@@ -290,6 +292,7 @@ function scale_c(size) {
     c.style.width=cw*(size/100)+"px";
     c.style.height=ch*(size/100)+"px";
     // console.log(c.offsetWidth,ch)
+    ps.config.canvas.scale=size;
 }
 document.querySelectorAll('.menu>input')[3].onchange=function() {
     scale_c(this.value);
@@ -314,35 +317,44 @@ document.querySelectorAll('.menubtn')[3].onclick=function() {
 }
 //开启 涂鸦
 document.querySelectorAll('.menubtn')[8].onclick=function() {
-    if (pen) {
-        pen=false;
+    if (ps.getMode()==2) {
+        ps.setMode(0);
         this.style.backgroundColor=null;
-    }else if(!clear_pen&&!cutting){
-        pen=true;
+    }else{
+        ps.setMode(2);
+        clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
     }
 }
 //开启 裁剪
 document.querySelectorAll('.menubtn')[5].onclick=function() {
-    if (cutting) {
-        cutting=false;
+    if (ps.getMode()==4) {
+        ps.setMode(0);
         this.style.backgroundColor=null;
-        cut_box.style.display="none";
         c.style.cursor="default";
     }else if(!clear_pen&&!pen){
-        cutting=true;
+        ps.setMode(4);
         c.style.cursor="crosshair";
+        clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
     }
 }
 //开启 橡皮擦
 document.querySelectorAll('.menubtn')[9].onclick=function() {
-    if (clear_pen) {
-        clear_pen=false;
+    if (ps.getMode()==3) {
+        ps.setMode(0);
         this.style.backgroundColor=null;
-    }else if(!pen&&!cutting){
-        clear_pen=true;
+    }else{
+        ps.setMode(3);
+        clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
+    }
+}
+//清楚菜单样式
+function clearMenuStyle(){
+    var menubtn=document.querySelectorAll('.menubtn');
+    for(var i=0;i<menubtn.length;i++){
+        menubtn[i].style.backgroundColor=null;
     }
 }
 //弹出颜色调节
