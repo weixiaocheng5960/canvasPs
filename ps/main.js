@@ -7,9 +7,29 @@ document.querySelectorAll('.menubtn')[0].onclick=function(){
 }
 input.onchange=function () {
     if (this.files[0]) {
-        ps.openFile(this.files[0]);
+        var file=this.files[0];
+        if (file.type.search('image/')!=(-1)) {
+            ps.openFile(file);
+        }else{
+            console.log("文件不是图片");
+        }
     }
     
+}
+// 拖放文件
+function dropFile(e){
+    e.preventDefault();
+    if (e.dataTransfer.files[0]){
+        var file=e.dataTransfer.files[0];
+        if (file.type.search('image/')!=(-1)) {
+            ps.openFile(file);
+        }else{
+            console.log("文件不是图片");
+        }
+    }
+}
+function allowDrop(event) {
+    event.preventDefault();
 }
 //初始化 数据
 function init() {
@@ -76,13 +96,13 @@ c.onwheel=function(e) {
 
     if (e.wheelDelta>0) {
         input_sc.value=num+5;
-        if (input_sc.value>200) {
-            input_sc.value=200;
+        if (input_sc.value>600) {
+            input_sc.value=600;
         }
     }else{
         input_sc.value=num-5;
-        if (input_sc.value<10) {
-            input_sc.value=10;
+        if (input_sc.value<5) {
+            input_sc.value=5;
         }
     }
     scale=input_sc.value
@@ -110,9 +130,9 @@ document.querySelectorAll('.menu>input')[2].onchange = function () {
 //空格监控
 var space=false;
 document.onkeydown=function(e){
-    e.preventDefault();
+   
     if (e.keyCode==32) {
-        
+         e.preventDefault();
         c.style.cursor="move";
         ps.setMode(6);
     }

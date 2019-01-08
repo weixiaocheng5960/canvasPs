@@ -10,7 +10,7 @@
     
 </head>
 <body>
-    <div class="box">
+    <div class="box"  ondrop="dropFile(event)" ondragover="allowDrop(event)">
         <div class="menu">
             <span class='menubtn' href="javascript:;" title="打开图片"><img width="35%" src="imgs/folder.png" alt=""></span>
             <span class='menubtn' href="javascript:;" class="none_btn" title="保存"><img width="30%" src="imgs/save.png" alt=""></span>
@@ -39,7 +39,7 @@
             <input type="color">
             <br>
             <span>显示比例:%</span>
-            <input type="number" value="100" max="200" min="10">
+            <input type="number" value="100" max="600" min="5">
 
         </div>
         <div class="work">
