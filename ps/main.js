@@ -110,8 +110,9 @@ document.querySelectorAll('.menu>input')[2].onchange = function () {
 //空格监控
 var space=false;
 document.onkeydown=function(e){
+    e.preventDefault();
     if (e.keyCode==32) {
-        e.preventDefault();
+        
         c.style.cursor="move";
         ps.setMode(6);
     }
@@ -163,10 +164,10 @@ document.querySelectorAll('.menubtn')[6].onclick=function() {
     if (ps.getMode()==6) {
         ps.setMode(0);
         this.style.backgroundColor=null;
-        c.style.cursor="default";
+        // c.style.cursor="default";
     }else{
         ps.setMode(6);
-        c.style.cursor="move";
+        // c.style.cursor="move";
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
     }

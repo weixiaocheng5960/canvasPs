@@ -188,16 +188,16 @@ CanvasPs.prototype.setMode=function(mode){
         break;
         case 6:
         this.c.style.cursor="move";
-        break
+        break;
+        default:
+        this.c.style.cursor="default";
+        break;
     }
     if(mode!=4){
         this.config.elements.cutBox.style.left='-20px';
         this.config.elements.cutBox.style.width='0';
         this.config.elements.cutBox.style.height='0';
         this.config.elements.cutBox.style.display='none';
-    }
-    if(mode!=6||mode!=4){
-        this.c.style.cursor="default";
     }
 }
 //获取模式
