@@ -87,7 +87,30 @@ for(var i=0;i<side_element.length;i++){
 }
 //默认设置------e
 
-
+// 显示菜单
+document.querySelector('#showmenu').addEventListener('touchend',function(){
+    var menu=document.querySelector('.menu');
+    if(menu.style.left=='0rem'){
+        menu.style.left='-5rem';
+        this.style.left='0rem';
+    }else{
+        menu.style.left='0rem';
+        this.style.left='5rem';
+    }
+    // console.log(e.targetTouches[0])
+})
+// 显示历史
+document.querySelector('#showhistory').addEventListener('touchend',function(){
+    var history=document.querySelector('.history');
+    if(history.style.right=='0rem'){
+        history.style.right='-6.6rem';
+        this.style.right='0rem';
+    }else{
+        history.style.right='0rem';
+        this.style.right='6.6rem';
+    }
+    // console.log(e.targetTouches[0])
+})
 //鼠标滚动缩放
 c.onwheel=function(e) {
     e.preventDefault();

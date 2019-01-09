@@ -2,7 +2,7 @@ window.onload=function() {
     //主界面高度
     document.querySelector('.box').style.height=innerHeight+"px";
     //工作区宽度
-    document.querySelector('.work').style.width = (innerWidth-100) + "px";
+    // document.querySelector('.work').style.width = (innerWidth-100) + "px";
     //居中调节窗口
     var alert_color=document.querySelector(".color");
     alert_color.style.top=(innerHeight/2-150)+"px";

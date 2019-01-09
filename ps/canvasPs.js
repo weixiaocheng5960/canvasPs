@@ -39,10 +39,12 @@ function CanvasPs(c){
                 y:0,
             },
             cutBox:{
-                status:1,//0-按下 1-松开 2-移动
+                status:1,//0-按下 1-松开 2-移动 3-调整
                 down:{
                     x:0,
                     y:0,
+                    ox:0,
+                    oy:0,
                 },
                 up:{
                     x:0,
@@ -67,6 +69,7 @@ function CanvasPs(c){
     }
     //裁剪框
     if(document.querySelectorAll('.canvas-ps-warp').length>0){
+        document.querySelectorAll('.canvas-ps-warp')[0].style.position= 'relative';
         this.config.elements.cutBox.className='pscut-box';
         this.config.elements.cutBox.title='双击确定';
         document.querySelectorAll('.canvas-ps-warp')[0].appendChild(this.config.elements.cutBox); 
@@ -75,15 +78,57 @@ function CanvasPs(c){
             canvasps.config.mouse.cutBox.status=1;
         }
         this.config.elements.cutBox.onmousedown=function(e){
-            canvasps.config.mouse.cutBox.status=0;
+            if((e.offsetY>this.offsetHeight-12)||(e.offsetX>this.offsetWidth-12)){
+                canvasps.config.mouse.cutBox.status=3;
+            }else{
+                canvasps.config.mouse.cutBox.status=0;
+            }
             canvasps.config.mouse.cutBox.down.x=e.pageX-this.offsetLeft;
             canvasps.config.mouse.cutBox.down.y=e.pageY-this.offsetTop;
+            canvasps.config.mouse.cutBox.down.ox=e.offsetX;
+            canvasps.config.mouse.cutBox.down.oy=e.offsetY;
         }
         this.config.elements.cutBox.onmousemove=function(e){
             canvasps.mouseWork.moveCuttingBox(e.pageX-canvasps.config.mouse.cutBox.down.x,e.pageY-canvasps.config.mouse.cutBox.down.y,canvasps);
         }
+        // 调整裁剪框大小
+        this.config.elements.cutBox.onclick=function(e){
+            var boxh=this.offsetHeight;
+            var boxw=this.offsetWidth;
+            var rx=parseInt(ps.c.style.left);
+            var ry=parseInt(ps.c.style.top);
+            // if(this.offsetLeft+boxw+6>canvasps.c.offsetWidth+rx || this.offsetTop+boxh+6>canvasps.c.offsetHeight+ry){
+                
+            //     return;
+                
+            // }
+           
+            if((e.offsetX<80&&e.offsetY<16)||(e.offsetX<boxh+80&&e.offsetY<boxh+16)){
+                //宽度
+                var nw;
+                var nh;
+                if(e.offsetX>14&&e.offsetX<26){
+                    nw=this.offsetWidth-6;
+                    this.style.width=nw+'px';
+                }else if(e.offsetX>28&&e.offsetX<32){
+                    nw=this.offsetWidth+6;
+                    this.style.width=nw+'px';
+                }
+                // 高度
+                else if(e.offsetX>54&&e.offsetX<68){
+                    nh=this.offsetHeight-6;
+                    this.style.height=nh+'px';
+                }else if(e.offsetX>68&&e.offsetX<80){
+                    nh=this.offsetHeight+6;
+                    this.style.height=nh+'px';
+                }
+            }
+        }
         //确定裁剪
-        this.config.elements.cutBox.ondblclick=function(){
+        this.config.elements.cutBox.ondblclick=function(e){
+            if((e.offsetX<80&&e.offsetY<16)||(e.offsetX<boxh+80&&e.offsetY<boxh+16)){
+                return;
+            }
             var rx=this.offsetLeft/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.left);
             var ry=this.offsetTop/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.top);
             var rw=this.offsetWidth/(canvasps.config.canvas.scale/100);
@@ -98,17 +143,15 @@ function CanvasPs(c){
     }else{
         console.log('必须在 canvas-ps-warp 类名下直接子元素 与canvas同级的块元素才可正常使用裁剪');
     }
-    if(c==null){
-        return;
-    }
+    this.c.style.position='absolute';
     //鼠标交互
     this.c.onmousedown = function (e) {
         e.preventDefault();
         canvasps.config.mouse.status=0;
         canvasps.config.canvas.x=e.pageX-this.offsetLeft;
         canvasps.config.canvas.y=e.pageY-this.offsetTop;
-        canvasps.config.mouse.down.x=e.pageX-80;
-        canvasps.config.mouse.down.y=e.pageY;
+        canvasps.config.mouse.down.x=e.offsetX;
+        canvasps.config.mouse.down.y=e.offsetY;
         if (canvasps.config.mode==4) {
             canvasps.showCuttingBox(true,canvasps);
         }
@@ -165,7 +208,7 @@ function CanvasPs(c){
     this.c.ondblclick = function (e) {
         ps.wand(e.offsetX / (canvasps.config.canvas.scale / 100), e.offsetY / (canvasps.config.canvas.scale / 100));
     }
-    
+    this.ready();
     this.upData();
 }
 //初始化
@@ -229,7 +272,7 @@ CanvasPs.prototype.showCuttingBox=function(show,ps){
     if (show) {
         ps.config.elements.cutBox.style.display='block';
     }else{
-        ps.config.elements.cutBox.style.left='-20px';
+        ps.config.elements.cutBox.style.left='-200px';
         ps.config.elements.cutBox.style.width='0';
         ps.config.elements.cutBox.style.height='0';
         ps.config.elements.cutBox.style.display='none';
@@ -518,6 +561,14 @@ CanvasPs.prototype.mouseWork=({
                     ps.config.elements.cutBox.style.height=hh+"px";
                 }
             }
+            //设置控制按钮位置
+            if(ps.config.elements.cutBox.offsetTop<16){
+                document.styleSheets[0].addRule('.pscut-box::after','top: auto'); 
+                document.styleSheets[0].addRule('.pscut-box::after','bottom: -16px'); 
+            }else{
+                document.styleSheets[0].addRule('.pscut-box::after','top: -16px'); 
+                document.styleSheets[0].addRule('.pscut-box::after','bottom: auto'); 
+            }
         }
     },
     // 移动裁剪框
@@ -532,8 +583,18 @@ CanvasPs.prototype.mouseWork=({
             if(y+ps.config.elements.cutBox.offsetHeight<=ps.c.offsetHeight+ry && y>=ry){
                 ps.config.elements.cutBox.style.top=y+'px';
             }
+            //设置控制按钮位置
+            if(ps.config.elements.cutBox.offsetTop<16){
+                document.styleSheets[0].addRule('.pscut-box::after','top: auto'); 
+                document.styleSheets[0].addRule('.pscut-box::after','bottom: -16px'); 
+            }else{
+                document.styleSheets[0].addRule('.pscut-box::after','top: -16px'); 
+                document.styleSheets[0].addRule('.pscut-box::after','bottom: auto'); 
+            }
         }
     },
+    
+    // 移动画布
     moveCanvas:function(x,y){
         if (ps.config.mouse.status==0) {
             ps.c.style.left=x+"px";
