@@ -31,6 +31,7 @@ function dropFile(e){
 function allowDrop(event) {
     event.preventDefault();
 }
+
 //初始化 数据
 function init() {
     
@@ -87,7 +88,7 @@ for(var i=0;i<side_element.length;i++){
 }
 //默认设置------e
 
-// 显示菜单
+// 显示菜单----触摸
 document.querySelector('#showmenu').addEventListener('touchend',function(){
     var menu=document.querySelector('.menu');
     if(menu.style.left=='0rem'){
@@ -150,16 +151,16 @@ document.querySelectorAll('.menu>input')[2].onchange = function () {
     ps.setColor(this.value);
     this.title = this.value;
 }
-//空格监控
-var space=false;
-document.onkeydown=function(e){
+// //空格监控
+// var space=false;
+// document.onkeydown=function(e){
    
-    if (e.keyCode==32) {
-         e.preventDefault();
-        c.style.cursor="move";
-        ps.setMode(6);
-    }
-}
+//     if (e.keyCode==32) {
+//          e.preventDefault();
+//         c.style.cursor="move";
+//         ps.setMode(6);
+//     }
+// }
 document.onkeyup=function(e){
     if (e.keyCode==32) {
         c.style.cursor="default";
@@ -184,11 +185,43 @@ document.querySelectorAll('.menubtn')[8].onclick=function() {
         ps.setMode(0);
         this.style.backgroundColor=null;
     }else{
+        ps.stopAnimate()
         ps.setMode(2);
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
     }
 }
+//填充颜色
+document.querySelectorAll('.menubtn')[9].onclick=function() {
+    var color=document.querySelectorAll('.menu>input')[2].value;
+    ps.setMode(8);
+    ps.fillSelect(hex2Rgb(color));
+}
+//颜色转化
+function hex2Rgb(hex) { 
+    //十六进制转为RGB  
+    var rgb = []; 
+    // 定义rgb数组  
+    if (/^\#[0-9A-F]{3}$/i.test(hex)) { 
+        //判断传入是否为#三位十六进制数   
+        let sixHex = '#';  
+        hex.replace(/[0-9A-F]/ig, function(kw) {    s
+            ixHex += kw + kw; //把三位16进制数转化为六位   
+        });   
+            hex = sixHex; //保存回hex  
+    }  
+    if (/^#[0-9A-F]{6}$/i.test(hex)) { 
+        //判断传入是否为#六位十六进制数   
+        hex.replace(/[0-9A-F]{2}/ig, function(kw) {    
+            rgb.push(eval('0x' + kw)); //十六进制转化为十进制并存如数组   
+        });   
+        return rgb; //输出RGB格式颜色  
+    } else {   
+        // console.log(`Input ${hex} is wrong!`);   
+        return [0,0,0];  
+    } 
+} 
+
 //开启 裁剪
 document.querySelectorAll('.menubtn')[5].onclick=function() {
     if (ps.getMode()==4) {
@@ -196,6 +229,7 @@ document.querySelectorAll('.menubtn')[5].onclick=function() {
         this.style.backgroundColor=null;
         c.style.cursor="default";
     }else{
+        ps.stopAnimate()
         ps.setMode(4);
         c.style.cursor="crosshair";
         clearMenuStyle();
@@ -216,11 +250,12 @@ document.querySelectorAll('.menubtn')[6].onclick=function() {
     }
 }
 //开启 橡皮擦
-document.querySelectorAll('.menubtn')[9].onclick=function() {
+document.querySelectorAll('.menubtn')[10].onclick=function() {
     if (ps.getMode()==3) {
         ps.setMode(0);
         this.style.backgroundColor=null;
     }else{
+        ps.stopAnimate()
         ps.setMode(3);
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
@@ -231,7 +266,7 @@ function canvaspsGo(index){
     ps.goto(index);
 }
 //刷新操作历史
-function refreshHistory(){
+!function refreshHistory(){
     var history=ps.getHistory();
     var historybox=document.querySelector('.history>div');
     historybox.innerHTML=null;
@@ -242,7 +277,8 @@ function refreshHistory(){
         ea.setAttribute('data-index',i);
         historybox.appendChild(ea);
     }
-}
+    setTimeout(refreshHistory,800);
+}()
 
 //清楚菜单样式
 function clearMenuStyle(){
@@ -408,6 +444,6 @@ document.querySelectorAll(".default_btn>a")[0].onclick=function () {
 
 // 通用窗口-----e
 // 查看 帮助
-document.querySelectorAll(".menubtn")[10].onclick=function () {
+document.querySelectorAll(".menubtn")[11].onclick=function () {
     show_def_window(true,function() {show_def_window(false)},"双击进入抠图选区,支持裁剪,简单调色,按住空格,鼠标可以拖到画布.可导出多种格式,简单方便!","使用手册");
 }

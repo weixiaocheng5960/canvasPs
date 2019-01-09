@@ -11,7 +11,7 @@ function CanvasPs(c){
     this.sample=null;//采样点
     this.select=false;//选择状态
     this.config={
-        mode:0,//0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色 6-移动画布 7-缩放画布 
+        mode:0,//0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色 6-移动画布 7-缩放画布 8-填充
         pen:{
             color:'red',
             size:10,
@@ -56,6 +56,24 @@ function CanvasPs(c){
                 },
             },
         },
+        touch:{
+            canvas:{
+                status:1,//0-按下 1-松开 2-移动
+                down:{
+                    x:0,
+                    y:0,
+                },
+                up:{
+                    x:0,
+                    y:0,
+                },
+                move:{
+                    x:0,
+                    y:0,
+                },
+            },
+            timer:null,
+        },
         elements:{
             cutBox:document.createElement('div'),
         },
@@ -93,17 +111,7 @@ function CanvasPs(c){
         }
         // 调整裁剪框大小
         this.config.elements.cutBox.onclick=function(e){
-            var boxh=this.offsetHeight;
-            var boxw=this.offsetWidth;
-            var rx=parseInt(ps.c.style.left);
-            var ry=parseInt(ps.c.style.top);
-            // if(this.offsetLeft+boxw+6>canvasps.c.offsetWidth+rx || this.offsetTop+boxh+6>canvasps.c.offsetHeight+ry){
-                
-            //     return;
-                
-            // }
-           
-            if((e.offsetX<80&&e.offsetY<16)||(e.offsetX<boxh+80&&e.offsetY<boxh+16)){
+            if(e.offsetX<80&&e.offsetY<0){
                 //宽度
                 var nw;
                 var nh;
@@ -126,7 +134,7 @@ function CanvasPs(c){
         }
         //确定裁剪
         this.config.elements.cutBox.ondblclick=function(e){
-            if((e.offsetX<80&&e.offsetY<16)||(e.offsetX<boxh+80&&e.offsetY<boxh+16)){
+            if(e.offsetX<80&&e.offsetY<0){
                 return;
             }
             var rx=this.offsetLeft/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.left);
@@ -150,8 +158,8 @@ function CanvasPs(c){
         canvasps.config.mouse.status=0;
         canvasps.config.canvas.x=e.pageX-this.offsetLeft;
         canvasps.config.canvas.y=e.pageY-this.offsetTop;
-        canvasps.config.mouse.down.x=e.offsetX;
-        canvasps.config.mouse.down.y=e.offsetY;
+        canvasps.config.mouse.down.x=e.pageX-80;
+        canvasps.config.mouse.down.y=e.pageY;
         if (canvasps.config.mode==4) {
             canvasps.showCuttingBox(true,canvasps);
         }
@@ -178,6 +186,12 @@ function CanvasPs(c){
             
             break;
             case 6:
+            
+            break;
+            case 7:
+            
+            break;
+            case 8:
             
             break;
         }
@@ -208,6 +222,78 @@ function CanvasPs(c){
     this.c.ondblclick = function (e) {
         ps.wand(e.offsetX / (canvasps.config.canvas.scale / 100), e.offsetY / (canvasps.config.canvas.scale / 100));
     }
+    // 触摸
+    this.c.addEventListener('touchstart',function(e){
+        e.preventDefault();
+        var mouse=e.targetTouches[0];
+        canvasps.config.mouse.status=0;
+        canvasps.config.canvas.x=mouse.pageX-this.offsetLeft;
+        canvasps.config.canvas.y=mouse.pageY-this.offsetTop;
+        canvasps.config.mouse.down.x=mouse.offsetX;
+        canvasps.config.mouse.down.y=mouse.offsetY;
+        if (canvasps.config.mode==4) {
+            canvasps.showCuttingBox(true,canvasps);
+        }
+        if(canvasps.config.mode==0){
+            canvasps.config.touch.timer=setTimeout(function(){
+                canvasps.wand(mouse.pageX / (canvasps.config.canvas.scale / 100), mouse.pageY / (canvasps.config.canvas.scale / 100));
+            },600);
+        }
+    })
+    this.c.addEventListener('touchend',function(e){
+        canvasps.config.mouse.status=1;
+        canvasps.config.mouse.cutBox.status=1;
+        switch(canvasps.config.mode){
+            case 0:
+            clearTimeout(canvasps.config.touch.timer);
+            break;
+            case 1:
+            break;
+            case 2:
+            canvasps.upData();
+            canvasps.addHistory({title:'画笔',data:canvasps.data})
+            break;
+            case 3:
+            canvasps.upData();
+            canvasps.addHistory({title:'擦除',data:canvasps.data})
+            break;
+            case 4:
+            
+            case 5:
+            
+            break;
+            case 6:
+            
+            break;
+        }
+        
+    })
+    this.c.addEventListener('touchmove',function(e){
+        var mouse=e.targetTouches[0];
+        switch(canvasps.config.mode){
+            case 0:
+            break;
+            case 1:
+            break;
+            case 2:
+            canvasps.mouseWork.draw(mouse.pageX,mouse.pageY,canvasps);
+            break;
+            case 3:
+            canvasps.mouseWork.clear(mouse.pageX,mouse.pageY,canvasps);
+            break;
+            case 4:
+            canvasps.mouseWork.cutting(mouse.pageX+parseInt(canvasps.c.style.left),mouse.pageY+parseInt(canvasps.c.style.top),canvasps);
+            break;
+            case 5:
+            // canvasps.mouseWork.cutting(mouse.pageX,mouse.pageY,canvasps);
+            break;
+            case 6:
+            canvasps.mouseWork.moveCanvas(mouse.pageX-canvasps.config.canvas.x,mouse.pageY-canvasps.config.canvas.y,canvasps);
+            break;
+        }
+        
+    })
+
     this.ready();
     this.upData();
 }
@@ -239,6 +325,9 @@ CanvasPs.prototype.setMode=function(mode){
     }
     if(mode!=4){
         this.showCuttingBox(false,this);
+    }
+    if(mode!=8){
+        this.stopAnimate();
     }
 }
 //获取模式
@@ -436,6 +525,27 @@ CanvasPs.prototype.clearSelect=function(){
     }
     this.ct.putImageData(this.data,0,0);
 }
+//填充选区
+CanvasPs.prototype.fillSelect=function(color){
+    
+    if(!this.select){
+        return;
+    }
+    this.stopAnimate();
+    this.upData();
+    this.addHistory({title:'填充',data:this.data})
+    var dat=this.sample;
+    for (var i = 0; i < this.data.data.length; i+=4) {
+	    //选择区
+	    if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
+            this.data.data[i]=color[0];
+            this.data.data[i+1]=color[1];
+			this.data.data[i+2]=color[2];
+			// this.data.data[i+3]=255;					
+		}
+    }
+    this.ct.putImageData(this.data,0,0);
+}
 //更新标准data数据
 CanvasPs.prototype.upData=function(ps){
     if(ps){
@@ -561,14 +671,6 @@ CanvasPs.prototype.mouseWork=({
                     ps.config.elements.cutBox.style.height=hh+"px";
                 }
             }
-            //设置控制按钮位置
-            if(ps.config.elements.cutBox.offsetTop<16){
-                document.styleSheets[0].addRule('.pscut-box::after','top: auto'); 
-                document.styleSheets[0].addRule('.pscut-box::after','bottom: -16px'); 
-            }else{
-                document.styleSheets[0].addRule('.pscut-box::after','top: -16px'); 
-                document.styleSheets[0].addRule('.pscut-box::after','bottom: auto'); 
-            }
         }
     },
     // 移动裁剪框
@@ -582,14 +684,6 @@ CanvasPs.prototype.mouseWork=({
             }
             if(y+ps.config.elements.cutBox.offsetHeight<=ps.c.offsetHeight+ry && y>=ry){
                 ps.config.elements.cutBox.style.top=y+'px';
-            }
-            //设置控制按钮位置
-            if(ps.config.elements.cutBox.offsetTop<16){
-                document.styleSheets[0].addRule('.pscut-box::after','top: auto'); 
-                document.styleSheets[0].addRule('.pscut-box::after','bottom: -16px'); 
-            }else{
-                document.styleSheets[0].addRule('.pscut-box::after','top: -16px'); 
-                document.styleSheets[0].addRule('.pscut-box::after','bottom: auto'); 
             }
         }
     },

@@ -6,6 +6,7 @@
 }
 .canvas-ps-warp{
     position: relative;
+    height: 100%;
 }
 /* PC端 */
 @media screen and (min-width:720px){
@@ -25,7 +26,7 @@
     }
     .menu{
         position: fixed;
-        left: 0;
+        left: 0px;
         top: 0;
         z-index: 50;
         width: 80px;
@@ -178,7 +179,6 @@
         width: 80px;
         height: 14px;
         top: -16px;
-        bottom: auto;
     }
     /* 操作历史 */
     .history{
