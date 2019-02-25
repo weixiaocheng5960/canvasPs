@@ -1,6 +1,16 @@
 window.onload=function() {
+    auto_size();
+}
+window.onresize=function(){
+    auto_size();
+    
+}
+//初始化UI
+function auto_size() {
     //主界面高度
     document.querySelector('.box').style.height=innerHeight+"px";
+    //工作区宽度
+    document.querySelector('.work').style.width = (innerWidth - 100) + "px";
     //工作区宽度
     // document.querySelector('.work').style.width = (innerWidth-100) + "px";
     //居中调节窗口
@@ -15,10 +25,4 @@ window.onload=function() {
     var alert_default=document.querySelector(".default");
     alert_default.style.top=(innerHeight/2-150)+"px";
     alert_default.style.left=(innerWidth/2-200-80)+"px";
-}
-window.onresize=function(){
-    //主界面高度
-    document.querySelector('.box').style.height = innerHeight + "px";
-    //工作区宽度
-    document.querySelector('.work').style.width = (innerWidth - 100) + "px";
 }

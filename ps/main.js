@@ -2,6 +2,10 @@ document.body.onselectstart=function(){return false}
 //打开文件
 var input = document.createElement('input');
 input.type = "file";
+var work_msg=document.querySelector('#work_msg');
+function work_msg_show(work_msg_str){
+    work_msg.innerHTML=work_msg_str;
+}
 document.querySelectorAll('.menubtn')[0].onclick=function(){
     input.click();
 }
@@ -170,6 +174,7 @@ document.onkeyup=function(e){
 //缩放画布
 document.querySelectorAll('.menu>input')[3].onchange=function() {
     ps.scaleCanvas(this.value);
+    work_msg_show('缩放画布');
 }
 //重置画布
 document.querySelectorAll('.menubtn')[7].onclick=function() {
@@ -184,11 +189,13 @@ document.querySelectorAll('.menubtn')[8].onclick=function() {
     if (ps.getMode()==2) {
         ps.setMode(0);
         this.style.backgroundColor=null;
+        
     }else{
         ps.stopAnimate()
         ps.setMode(2);
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
+        work_msg_show('涂鸦模式');
     }
 }
 //填充颜色
@@ -228,12 +235,14 @@ document.querySelectorAll('.menubtn')[5].onclick=function() {
         ps.setMode(0);
         this.style.backgroundColor=null;
         c.style.cursor="default";
+        
     }else{
         ps.stopAnimate()
         ps.setMode(4);
         c.style.cursor="crosshair";
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
+        work_msg_show('裁剪画布');
     }
 }
 //开启 移动
@@ -247,6 +256,7 @@ document.querySelectorAll('.menubtn')[6].onclick=function() {
         // c.style.cursor="move";
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
+        work_msg_show('移动画布');
     }
 }
 //开启 橡皮擦
@@ -254,11 +264,13 @@ document.querySelectorAll('.menubtn')[10].onclick=function() {
     if (ps.getMode()==3) {
         ps.setMode(0);
         this.style.backgroundColor=null;
+
     }else{
         ps.stopAnimate()
         ps.setMode(3);
         clearMenuStyle();
         this.style.backgroundColor="#B2B2B2";
+        work_msg_show('擦除模式');
     }
 }
 //画布跳转指定历史
@@ -298,6 +310,7 @@ document.querySelectorAll('.menubtn')[4].onclick=function() {
             c_input[i].value=0;
         }
         alt_color.style.display="block";
+        work_msg_show('颜色调节');
     }
 }
 //弹出颜色调节 --关闭按钮
