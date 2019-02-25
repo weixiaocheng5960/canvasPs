@@ -137,8 +137,8 @@ function CanvasPs(c){
             if(e.offsetX<80&&e.offsetY<0){
                 return;
             }
-            var rx=this.offsetLeft/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.left);
-            var ry=this.offsetTop/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.top);
+            var rx=this.offsetLeft/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.left)/(canvasps.config.canvas.scale/100);
+            var ry=this.offsetTop/(canvasps.config.canvas.scale/100)-parseInt(canvasps.c.style.top)/(canvasps.config.canvas.scale/100);
             var rw=this.offsetWidth/(canvasps.config.canvas.scale/100);
             var rh=this.offsetHeight/(canvasps.config.canvas.scale/100);
             canvasps.imgCutting(rx,ry,rw,rh,canvasps);
@@ -147,6 +147,7 @@ function CanvasPs(c){
             canvasps.addHistory({title:'裁剪',data:canvasps.data})
             //恢复裁剪框
             canvasps.showCuttingBox(false,canvasps);
+            // console.log(rx,ry);
         }
     }else{
         console.log('必须在 canvas-ps-warp 类名下直接子元素 与canvas同级的块元素才可正常使用裁剪');
@@ -619,6 +620,8 @@ CanvasPs.prototype.imgCutting=function(x,y,w,h,ps) {
     ps.data=ps.ct.getImageData(x,y,w,h);
     ps.c.width=w;
     ps.c.height=h;
+    ps.c.style.left=0;
+    ps.c.style.top=0;
     ps.ct.putImageData(ps.data,0,0);
 }
 //移动画布
