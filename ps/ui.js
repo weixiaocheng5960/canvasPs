@@ -10,7 +10,7 @@ function auto_size() {
     //主界面高度
     document.querySelector('.box').style.height=innerHeight+"px";
     //工作区宽度
-    document.querySelector('.work').style.width = (innerWidth - 100) + "px";
+    document.querySelector('.work').style.width = (innerWidth) + "px";
     //工作区宽度
     // document.querySelector('.work').style.width = (innerWidth-100) + "px";
     //居中调节窗口
@@ -25,6 +25,4 @@ function auto_size() {
     var alert_default=document.querySelector(".default");
     alert_default.style.top=(innerHeight/2-150)+"px";
     alert_default.style.left=(innerWidth/2-200-80)+"px";
-    //色环位置
-    document.querySelector('.color_select_box').style.top=document.querySelectorAll('.menu>input')[2].offsetTop+'px'
 }
