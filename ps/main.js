@@ -1,3 +1,9 @@
+/*
+    作者：姜宏
+    时间：2018-12-20
+    备注：欢迎大家使用，帮忙优化。本人是新手，自然入不了大神的法眼。但是乐意接受任何评论。
+    联系：QQ 1637124239
+*/
 document.body.onselectstart=function(){return false}
 //打开文件
 var input = document.createElement('input');
