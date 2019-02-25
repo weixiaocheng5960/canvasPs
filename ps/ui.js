@@ -25,4 +25,6 @@ function auto_size() {
     var alert_default=document.querySelector(".default");
     alert_default.style.top=(innerHeight/2-150)+"px";
     alert_default.style.left=(innerWidth/2-200-80)+"px";
+    //色环位置
+    document.querySelector('.color_select_box').style.top=document.querySelectorAll('.menu>input')[2].offsetTop+'px'
 }

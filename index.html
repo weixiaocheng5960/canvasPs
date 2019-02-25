@@ -37,7 +37,7 @@
             <br>
             <span>笔刷颜色</span>
             <br>
-            <input type="color">
+            <input type="color" value="#ff0000">
             <br>
             <span>显示比例</span>
             <input type="number" value="100" max="600" min="5">
@@ -46,6 +46,9 @@
             <span>操作提示</span>
             <br>
             <span><b id="work_msg">无</b></span>
+            <div class="color_select_box">
+                <canvas width="200" height="200"></canvas>
+            </div>
         </div>
         <div class="work">
             <div class="canvas-ps-warp">
@@ -73,6 +76,7 @@
                         <a href="javacsript:;">确 定</a>
                     </div>
                 </div>
+                
                 <!-- 保存窗口 -->
                 <div class="save windows">
                     <h4>&nbsp;选择保存类型<span>&times;</span></h4>

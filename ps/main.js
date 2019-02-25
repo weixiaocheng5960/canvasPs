@@ -210,6 +210,7 @@ document.querySelectorAll('.menubtn')[9].onclick=function() {
     ps.setMode(8);
     ps.fillSelect(hex2Rgb(color));
 }
+
 //颜色转化
 function hex2Rgb(hex) { 
     //十六进制转为RGB  

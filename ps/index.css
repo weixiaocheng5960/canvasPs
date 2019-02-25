@@ -73,11 +73,22 @@
         border: solid 2px rgb(134, 134, 134);
         z-index: 10;
     }
-    /*-----颜色----*/
+    /*-----颜色调节----*/
     .color{
         display: none;
         width: 400px;
         height: 300px;
+    }
+    /*-----颜色选择----*/
+    .color_select_box{
+        position: fixed;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+    .color_select_box>canvas{
+        display: none;
     }
     .windows{
         background-color: #F8F8F8;
