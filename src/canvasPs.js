@@ -3,7 +3,7 @@
     作者：姜宏
     时间：2018-12-20
     备注：欢迎大家使用，帮忙优化。本人是新手，自然入不了大神的法眼。但是乐意接受任何评论。
-    联系：QQ 1637124239
+    联系：weixn jherhao
 */
 function CanvasPs(c){
     var canvasps=this;//
@@ -16,8 +16,9 @@ function CanvasPs(c){
     this.animation=null;//选区视效
     this.sample=null;//采样点
     this.select=false;//选择状态
+    this.imgsrc=null;//临时存在img对象
     this.config={
-        mode:0,//0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色 6-移动画布 7-缩放画布 8-填充
+        mode:0,//0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色 6-移动画布 7-缩放画布 8-填充 9-铅笔 10-画笔抠图
         pen:{
             color:'red',
             size:10,
@@ -159,7 +160,7 @@ function CanvasPs(c){
         console.log('必须在 canvas-ps-warp 类名下直接子元素 与canvas同级的块元素才可正常使用裁剪');
     }
     this.c.style.position='absolute';
-    //鼠标交互
+    //-----画板----鼠标交互
     this.c.onmousedown = function (e) {
         e.preventDefault();
         canvasps.config.mouse.status=0;
@@ -169,7 +170,19 @@ function CanvasPs(c){
         canvasps.config.mouse.down.y=e.pageY;
         if (canvasps.config.mode==4) {
             canvasps.showCuttingBox(true,canvasps);
+        }else if(canvasps.config.mode==9){
+            canvasps.ct.lineCap='round';
+            canvasps.ct.strokeStyle=ps.config.pen.color;
+            canvasps.ct.lineWidth=canvasps.config.pen.size;
+            canvasps.ct.beginPath();
+        }else if(canvasps.config.mode==10){
+            canvasps.ct.lineCap='round';
+            canvasps.ct.strokeStyle=ps.config.pen.color;
+            canvasps.ct.lineWidth=0.1;
+            canvasps.ct.beginPath();
+            canvasps.imgsrc=ps.c.toDataURL();
         }
+
     }
     this.c.onmouseup = function (e) {
         canvasps.config.mouse.status=1;
@@ -181,7 +194,7 @@ function CanvasPs(c){
             break;
             case 2:
             canvasps.upData();
-            canvasps.addHistory({title:'画笔',data:canvasps.data})
+            canvasps.addHistory({title:'笔刷',data:canvasps.data})
             break;
             case 3:
             canvasps.upData();
@@ -200,6 +213,15 @@ function CanvasPs(c){
             break;
             case 8:
             
+            break;
+            case 9:
+            canvasps.upData();
+            canvasps.addHistory({title:'铅笔',data:canvasps.data})
+            break;
+            case 10:
+            canvasps.pencutdata(ps);//保存抠图结果
+            canvasps.upData();
+            canvasps.addHistory({title:'抠图',data:canvasps.data})
             break;
         }
     }
@@ -224,83 +246,21 @@ function CanvasPs(c){
             case 6:
             canvasps.mouseWork.moveCanvas(e.pageX-canvasps.config.canvas.x,e.pageY-canvasps.config.canvas.y,canvasps);
             break;
+             case 7:
+            break;
+             case 8:
+            break;
+            case 9:
+            canvasps.mouseWork.pencil(e.layerX,e.layerY,canvasps);
+            break;
+            case 10:
+            canvasps.mouseWork.pencut(e.layerX,e.layerY,canvasps);
+            break;
         }
     }
     this.c.ondblclick = function (e) {
         ps.wand(e.offsetX / (canvasps.config.canvas.scale / 100), e.offsetY / (canvasps.config.canvas.scale / 100));
     }
-    // 触摸
-    this.c.addEventListener('touchstart',function(e){
-        e.preventDefault();
-        var mouse=e.targetTouches[0];
-        canvasps.config.mouse.status=0;
-        canvasps.config.canvas.x=mouse.pageX-this.offsetLeft;
-        canvasps.config.canvas.y=mouse.pageY-this.offsetTop;
-        canvasps.config.mouse.down.x=mouse.offsetX;
-        canvasps.config.mouse.down.y=mouse.offsetY;
-        if (canvasps.config.mode==4) {
-            canvasps.showCuttingBox(true,canvasps);
-        }
-        if(canvasps.config.mode==0){
-            canvasps.config.touch.timer=setTimeout(function(){
-                canvasps.wand(mouse.pageX / (canvasps.config.canvas.scale / 100), mouse.pageY / (canvasps.config.canvas.scale / 100));
-            },600);
-        }
-    })
-    this.c.addEventListener('touchend',function(e){
-        canvasps.config.mouse.status=1;
-        canvasps.config.mouse.cutBox.status=1;
-        switch(canvasps.config.mode){
-            case 0:
-            clearTimeout(canvasps.config.touch.timer);
-            break;
-            case 1:
-            break;
-            case 2:
-            canvasps.upData();
-            canvasps.addHistory({title:'画笔',data:canvasps.data})
-            break;
-            case 3:
-            canvasps.upData();
-            canvasps.addHistory({title:'擦除',data:canvasps.data})
-            break;
-            case 4:
-            
-            case 5:
-            
-            break;
-            case 6:
-            
-            break;
-        }
-        
-    })
-    this.c.addEventListener('touchmove',function(e){
-        var mouse=e.targetTouches[0];
-        switch(canvasps.config.mode){
-            case 0:
-            break;
-            case 1:
-            break;
-            case 2:
-            canvasps.mouseWork.draw(mouse.pageX,mouse.pageY,canvasps);
-            break;
-            case 3:
-            canvasps.mouseWork.clear(mouse.pageX,mouse.pageY,canvasps);
-            break;
-            case 4:
-            canvasps.mouseWork.cutting(mouse.pageX+parseInt(canvasps.c.style.left),mouse.pageY+parseInt(canvasps.c.style.top),canvasps);
-            break;
-            case 5:
-            // canvasps.mouseWork.cutting(mouse.pageX,mouse.pageY,canvasps);
-            break;
-            case 6:
-            canvasps.mouseWork.moveCanvas(mouse.pageX-canvasps.config.canvas.x,mouse.pageY-canvasps.config.canvas.y,canvasps);
-            break;
-        }
-        
-    })
-
     this.ready();
     this.upData();
 }
@@ -635,13 +595,28 @@ CanvasPs.prototype.moveCanvas=function(x,y){
     this.c.style.left=x+"px";
     this.c.style.top=y+"px";
 }
-// 鼠标交互操作
+// 鼠标移动执行操作
 CanvasPs.prototype.mouseWork=({
     //涂鸦
     draw:function(x,y,ps){
         if (ps.config.mouse.status==0) {
             ps.ct.fillStyle=ps.config.pen.color;
             ps.ct.fillRect(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100),ps.config.pen.size,ps.config.pen.size);
+        }
+    },
+    //铅笔
+    pencil:function(x,y,ps){
+        if (ps.config.mouse.status==0) {
+            
+            ps.ct.lineTo(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100));
+            ps.ct.stroke();
+        }
+    },
+    //铅笔抠图
+    pencut:function(x,y,ps){
+        if (ps.config.mouse.status==0) {
+            ps.ct.lineTo(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100));
+            ps.ct.stroke();
         }
     },
     //橡皮擦
@@ -705,3 +680,11 @@ CanvasPs.prototype.mouseWork=({
         }
     },
 })
+CanvasPs.prototype.pencutdata = function(ps) {
+    ps.ct.closePath();
+    ps.ct.stroke();
+    ps.ct.save();
+    ps.ct.clip();
+    ps.ct.clearRect(0,0,ps.c.width,ps.c.height);
+    ps.ct.restore();
+};
