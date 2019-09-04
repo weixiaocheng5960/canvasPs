@@ -45,8 +45,9 @@
         text-align: center;
         display: inline-block;
         margin-top: 4px;
-    width:30px;
-    height:30px;
+        width:30px;
+        height:30px;
+        margin-left: 4px;
         margin-bottom: 4px;
         color: white;
         text-decoration: none;
@@ -63,6 +64,12 @@
     }
     .menu input{
         width: 50%;
+    }
+    .color_selector{
+        display: inline-block;
+        width: 2rem;
+        height: 1rem;
+        background-color: rgba(255,0,0,1);
     }
     /* 画布 */
     #canvas{
@@ -98,9 +105,11 @@
         box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     }
     .windows>div{
-        width: 80%;
-        margin: 2% auto;
+        width: 98%;
+        padding-left: 1rem;
+        margin: 0.7rem auto;
         text-align: center;
+        box-sizing: border-box;
     }
     .windows>h4{
         background-color: #8E8C8C;
@@ -136,6 +145,12 @@
     }
     .submit_color>a:hover{
         background-color: #555454;
+    }
+    #show_color_box{
+        margin: 0 auto;
+        width: 2rem;
+        background-color: red;
+        height: 2rem;
     }
     /*笔刷光标模拟*/
     .easer{

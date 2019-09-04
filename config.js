@@ -26,6 +26,11 @@ var config={
 			action:'cancel()'//事件
 		},
 		{
+			title:'多边形选择',//标题
+			icon:'asset/imgs/polygon.svg',//图标
+			action:'startpolygon(this)'//事件
+		},
+		{
 			title:'删除选择',//标题
 			icon:'asset/imgs/emptytrash.png',//图标
 			action:'del_select()'//事件
@@ -33,7 +38,7 @@ var config={
 		{
 			title:'色彩平衡',//标题
 			icon:'asset/imgs/Color.png',//图标
-			action:'opencolorwindow()'//事件
+			action:'opencolorwindow(this)'//事件
 		},
 		{
 			title:'裁剪',//标题
@@ -54,6 +59,11 @@ var config={
 			title:'画笔',//标题
 			icon:'asset/imgs/paintbrush.svg',//图标
 			action:'startdraw(this)'//事件
+		},
+		{
+			title:'拾色器',//标题
+			icon:'asset/imgs/colorpicker.png',//图标
+			action:'pickercolor(this)'//事件
 		},
 		{
 			title:'铅笔',//标题
@@ -86,25 +96,29 @@ var config={
 			title:'容差',
 			edit_type:'input',
 			value:'0',
-			event:'settolerance(this)'
+			event:'settolerance(this)',
+			click:''
 		},
 		{
 			title:'笔刷大小',
 			edit_type:'input',
 			value:'10',
-			event:'setpensize(this)'
+			event:'setpensize(this)',
+			click:''
 		},
 		{
 			title:'笔刷颜色',
 			edit_type:'color',
 			value:'',
-			event:'changecolor(this)'
+			event:'changecolor(this)',
+			click:'selectcolor(this)'
 		},
 		{
 			title:'显示比例',
 			edit_type:'input',
 			value:'100',
-			event:'scalecavans(this)'
+			event:'scalecavans(this)',
+			click:''
 		},
 	]
 }

@@ -12,6 +12,7 @@ function System(warp) {
         console.log('请选择正确容器');
         return '请选择正确容器';
     }
+    this.windows_close_call=null;//窗口关闭回调
     //公共数据
     this.ps={
         pen:{
@@ -66,7 +67,7 @@ System.prototype.loadui = function() {
     tempstr='<hr>';
     for (var i = 0; i < config.tools_control.length; i++) {
         if (config.tools_control[i].edit_type==='color') {
-            tempstr+='<span title="'+config.tools_control[i].title+'">'+config.tools_control[i].title+'</span><br><input type="color" value="#ff0000" onchange="'+config.tools_control[i].event+'"><br>';
+            tempstr+='<span title="'+config.tools_control[i].title+'">'+config.tools_control[i].title+'</span><br><i title="rgba(255,0,0,1)" class="color_selector" style="background-color:rgba(255,0,0,1)" onclick="'+config.tools_control[i].click+'"></i><br>';
         }else{
             tempstr+='<span title="'+config.tools_control[i].title+'">'+config.tools_control[i].title+'</span><br><input type="number" max="1000" min="0" value="'+config.tools_control[i].value+'" onchange="'+config.tools_control[i].event+'"><br>';
         }
@@ -85,9 +86,9 @@ System.prototype.loadui = function() {
     /*
         弹出组件生成
     */
-    tempstr='<!-- 调色窗口 --><div class="color windows"><h4>&nbsp;颜色调节<span onclick="system.closewindow(1)">&times;</span></h4><div class="contr_color"><h5>R: <input id="color_r" type="range" value="0" min="-255" max="255"></h5><h5>G: <input id="color_g" type="range" value="0" min="-255" max="255"></h5>';
-    tempstr+='<h5>B: <input id="color_b" type="range" value="0" min="-255" max="255"></h5><h5>A: <input id="color_a" type="range" value="0" min="-255" max="255"></h5></div><div class="submit color_btn"><a href="javacsript:;" onclick="system.closewindow(1)">取 消</a><a href="javacsript:;" onclick="system.closewindow(1,editcolor())">确 定</a></div></div>';
-    tempstr+='<!-- 保存窗口 --><div class="save windows"><h4>&nbsp;选择保存类型<span onclick="system.closewindow(2)">&times;</span></h4> <div class="contr_save"><h5 class="contr_save_type">类型: <span title="常用格式,可压缩">JPEG<input name="image" type="radio" checked="checked"></span><span title="带透明通道">PNG<input name="image" type="radio" checked="checked"></span><span title="window常用图片">BMP<input name="image" type="radio"></span></h5> <h5 class="contr_save_gre">质量: <input title="0.8" type="range" value="8" min="1" max="10" onchange="this.title=this.value/10"></h5> </div><div class="submit save_btn"> <a href="javacsript:;" onclick="system.closewindow(2)">取 消</a><a href="javacsript:;" onclick="system.closewindow(2)">确 定</a>  </div> </div>';
+    tempstr='<!-- 调色窗口 --><div class="color windows"><h4>&nbsp;颜色调节<span onclick="system.closewindow(1)">&times;</span></h4><div class="contr_color"><h5>R: <input id="color_r" type="range" value="0" min="0" max="255" onchange="system.showcolor(this)"></h5><h5>G: <input id="color_g" type="range" value="0" min="0" max="255" onchange="system.showcolor(this)"></h5>';
+    tempstr+='<h5>B: <input id="color_b" type="range" value="0" min="0" max="255" onchange="system.showcolor(this)"></h5><h5>A: <input onchange="system.showcolor(this)" id="color_a" type="range" value="0" min="0" max="1" step="0.1"></h5><div id="show_color_box"></div></div><div class="submit color_btn"><a href="javacsript:;" onclick="system.closewindow(1)">取 消</a><a href="javacsript:;" onclick="system.closewindow(1,1)">确 定</a></div></div>';
+    tempstr+='<!-- 保存窗口 --><div class="save windows"><h4>&nbsp;选择保存类型<span onclick="system.closewindow(2)">&times;</span></h4> <div class="contr_save"><h5 class="contr_save_type">类型: <span title="常用格式,可压缩">JPEG<input name="image" type="radio" checked="checked"></span><span title="带透明通道">PNG<input name="image" type="radio" checked="checked"></span><span title="window常用图片">BMP<input name="image" type="radio"></span></h5> <h5 class="contr_save_gre">质量: <input title="0.8" type="range" value="8" min="1" max="10" onchange="this.title=this.value/10"></h5> </div><div class="submit save_btn"> <a href="javacsript:;" onclick="system.closewindow(2)">取 消</a><a href="javacsript:;" onclick="system.closewindow(2,1)">确 定</a>  </div> </div>';
     tempstr+='<!-- 通用窗口 -->  <div class="default windows"><h4>&nbsp;<label for="">信息提示</label>：<span onclick="system.closewindow(0)">&times;</span></h4>   <div class="default_cont">   <p>真的要这样吗?</p>   </div>   <div class="submit default_btn">   <a href="javacsript:;" onclick="system.closewindow(0)">取 消</a>   <a onclick="system.closewindow(0)" href="javacsript:;">确 定</a>   </div>  </div>';
     alertbox.innerHTML=tempstr;
 
@@ -189,6 +190,18 @@ System.prototype.loadui = function() {
         alt_mouse_d=false;
     }
 };
+System.prototype.showcolor = function(el) {
+    var show_color_box=document.querySelector('#show_color_box');
+    var r_input=document.querySelector('#color_r');
+    var g_input=document.querySelector('#color_g');
+    var b_input=document.querySelector('#color_b');
+    var a_input=document.querySelector('#color_a');
+    var color_str=el.title;
+    color_str=color_str.replace(/[rgba\(\)]/g,'');
+    var color=color_str.split(',');
+    show_color_box.style.backgroundColor='rgba('+r_input.value+','+g_input.value+','+b_input.value+','+a_input.value+')';
+        el.title='rgba('+r_input.value+','+g_input.value+','+b_input.value+','+a_input.value+')';
+};
 /*
     工具栏操作信息提示
 */
@@ -198,7 +211,7 @@ System.prototype.toolmsg=function(str) {
 /*
     关闭窗口----共三种窗口
 */
-System.prototype.closewindow = function(type,callback) {
+System.prototype.closewindow = function(type,cmd) {
     if (type===0) {
         document.querySelector(".default").style.display='none';
     }else if (type===1) {
@@ -206,14 +219,18 @@ System.prototype.closewindow = function(type,callback) {
     }else if (type===2) {
         document.querySelector(".save").style.display='none';
     }
-    if (callback) {
-        callback();
+    
+    if (cmd===1) {
+        if (this.windows_close_call) {
+            this.windows_close_call();
+        }
     }
+    
 };
 /*
     创建窗口----共三种窗口
 */
-System.prototype.openwindow = function(type,title,msg) {
+System.prototype.openwindow = function(type,title,msg,callback) {
     if (type===0) {
         var default_window=document.querySelector(".default");
         document.querySelector(".default label").innerHTML=title;
@@ -223,10 +240,18 @@ System.prototype.openwindow = function(type,title,msg) {
         }
         default_window.style.display='block';
     }else if (type===1) {
+        //调色
+        var show_color_box=document.querySelector('#show_color_box');
+        var r_input=document.querySelector('#color_r');
+        var g_input=document.querySelector('#color_g');
+        var b_input=document.querySelector('#color_b');
+        var a_input=document.querySelector('#color_a');
+        show_color_box.style.backgroundColor='rgba('+r_input.value+','+g_input.value+','+b_input.value+','+a_input.value+')';
         document.querySelector(".color").style.display='block';
     }else if (type===2) {
         document.querySelector(".save").style.display='block';
     }
+    this.windows_close_call=callback;
 };
 /*
     移动窗口----共三种窗口

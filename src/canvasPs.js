@@ -15,12 +15,23 @@ function CanvasPs(c){
     this.alw=0;//容差
     this.animation=null;//选区视效
     this.sample=null;//采样点
-    this.select=false;//选择状态
+    this.select=false;//当前选择采样点
+    this.select_type=0;//0-颜色选择 1-多边形
+    this.selectdata=null;//当前选择数据
     this.imgsrc=null;//临时存在img对象
+    this.lastmode=0;//上次使用的模式
+    this.polygoncallback=null;//多边形回调
+    this.pickercallback=null;//拾色器回调
     this.config={
-        mode:0,//0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色 6-移动画布 7-缩放画布 8-填充 9-铅笔 10-画笔抠图
+        mode:0,
+        /*
+        0-正常 1-魔术棒 2-画笔 3-橡皮擦 4-裁剪 5-调色
+         6-移动画布 7-缩放画布 8-填充 9-铅笔 10-画笔抠图
+         11-多边形选择 12--拾色器
+        */
         pen:{
-            color:'red',
+            color:'rgba(255,0,0,1)',
+            colors:[255,0,0,1],
             size:10,
             status:0,
         },
@@ -182,7 +193,8 @@ function CanvasPs(c){
             canvasps.ct.beginPath();
             canvasps.imgsrc=ps.c.toDataURL();
         }
-
+        canvasps.polygon(e.offsetX / (canvasps.config.canvas.scale / 100), e.offsetY / (canvasps.config.canvas.scale / 100),canvasps,e.which);
+        // console.log(e.which)
     }
     this.c.onmouseup = function (e) {
         canvasps.config.mouse.status=1;
@@ -223,7 +235,17 @@ function CanvasPs(c){
             canvasps.upData();
             canvasps.addHistory({title:'抠图',data:canvasps.data})
             break;
+            case 12:
+            if (e.which===3) {
+                if (canvasps.pickercallback) {
+                    canvasps.pickercallback(true);
+                }
+            }
+            break;
         }
+    }
+    this.c.oncontextmenu=function(e) {
+        e.preventDefault();
     }
     this.c.onmousemove = function (e) {
         switch(canvasps.config.mode){
@@ -256,6 +278,9 @@ function CanvasPs(c){
             case 10:
             canvasps.mouseWork.pencut(e.layerX,e.layerY,canvasps);
             break;
+            case 12:
+            canvasps.mouseWork.pickercolor(e.layerX-parseInt(canvasps.c.style.left),e.layerY-parseInt(canvasps.c.style.top),canvasps);
+            break;
         }
     }
     this.c.ondblclick = function (e) {
@@ -276,8 +301,15 @@ CanvasPs.prototype.ready=function(){
     this.config.history[0].data=this.ct.getImageData(0,0,this.c.width,this.c.height);
 }
 //设置模式
-CanvasPs.prototype.setMode=function(mode){
+CanvasPs.prototype.setMode=function(mode,callback){
+    if (mode===11) {
+        this.lastmode=mode;
+    }else{
+        this.lastmode=this.config.mode*1;
+    }
+    
     this.config.mode=mode;
+
     switch(mode){
         case 4:
         this.c.style.cursor="crosshair";
@@ -285,6 +317,16 @@ CanvasPs.prototype.setMode=function(mode){
         break;
         case 6:
         this.c.style.cursor="move";
+        break;
+        case 11:
+        this.c.style.cursor="default";
+        this.ct.beginPath();//开启多边形
+        this.ct.fillStyle=this.config.pen.color;
+        this.ct.strokeStyle=this.config.pen.color;
+        this.ct.lineWidth=this.config.pen.size/10;
+        break;
+        case 12:
+        this.c.style.cursor="crosshair";
         break;
         default:
         this.c.style.cursor="default";
@@ -296,7 +338,41 @@ CanvasPs.prototype.setMode=function(mode){
     if(mode!=8){
         this.stopAnimate();
     }
+    if (callback) {
+        this.polygoncallback=callback;
+    }
 }
+//根据数据重绘图像
+CanvasPs.prototype.redraw = function(ps,data) {
+    var img=new Image();
+    var canvas=document.createElement('canvas');
+    canvas.width=ps.c.width;
+    canvas.height=ps.c.height;
+    var ct=canvas.getContext('2d');
+    ct.putImageData(data,0,0);
+    img.src=canvas.toDataURL();
+    img.onload=function(){
+        ps.ct.drawImage(img,0,0);
+        ps.selectdata=ps.ct.getImageData(0,0,ps.c.width,ps.c.height);
+    }
+};
+//获取选区内数据
+CanvasPs.prototype.getareadata = function(ps,data) {
+    var img=new Image();
+    var canvas=document.createElement('canvas');
+    canvas.width=ps.c.width;
+    canvas.height=ps.c.height;
+    var ct=canvas.getContext('2d');
+    ct.putImageData(data,0,0);
+    img.src=canvas.toDataURL();
+    img.onload=function(){
+        ps.ct.drawImage(img,0,0);
+        ps.selectdata=ps.ct.getImageData(0,0,ps.c.width,ps.c.height);
+        ps.ct.putImageData(data,0,0);
+        ps.setpolygon(ps);
+        ps.ct.restore();
+    }
+};
 //获取模式
 CanvasPs.prototype.getMode=function(){
     return this.config.mode;
@@ -337,6 +413,13 @@ CanvasPs.prototype.showCuttingBox=function(show,ps){
 // 设置画笔颜色
 CanvasPs.prototype.setColor=function(color){
     this.config.pen.color=color;
+    var color_str=color;
+    color_str=color_str.replace(/[rgba\(\)]/g,'');
+    this.config.pen.colors=color_str.split(',');
+}
+// 获取画笔颜色
+CanvasPs.prototype.getColor=function(){
+    return this.config.pen.color
 }
 // 设置画笔大小
 CanvasPs.prototype.setWidth = function (size) {
@@ -386,8 +469,62 @@ CanvasPs.prototype.select_data=function(dd){
     }
     
 }
+//多边形选择
+CanvasPs.prototype.polygon = function(x,y,self,type) {
+    if (self.config.mode===11&&type==1) {
+        self.ct.arc(x,y,self.config.pen.size/10*2,0,Math.PI*2);
+        self.ct.fill();
+        self.ct.lineTo(x,y);
+        self.ct.stroke();
+    }else if (self.config.mode===11&&type==3) {
+        //结束选择
+        
+        self.ct.closePath();
+        self.ct.save();
+        //创建选区
+        self.ct.clearRect(0,0,self.c.width,self.c.height);//清除选择框
+        self.ct.clip();
+        self.getareadata(self,self.data);
+        self.ct.restore();
+        self.ct.clearRect(0,0,self.c.width,self.c.height);//清除选择框
+        self.ct.save();
+        // self.redraw(self,self.data);//还原数据
+        self.ct.clip();
+        self.ct.fillStyle='rgba(255,255,255,0.8)';
+        self.ct.fillRect(0,0,self.c.width,self.c.height);//设置选择样式
+        self.config.mode=0;
+        if (self.polygoncallback) {
+            if (typeof self.polygoncallback === "function") {
+                self.polygoncallback();//回调函数
+            }else{
+                console.log('多边形选区回调函数错误！');
+            }
+            
+        }
+        
+    }
+};
+//设置 多边形选区 样式
+CanvasPs.prototype.setpolygon = function(ps) {
+    ps.n_data=ps.ct.getImageData(0,0,ps.c.width,ps.c.height);
+    for (var i = 0; i < ps.n_data.data.length; i+=4) {
+        //选择区
+        if(ps.n_data.data[i]===ps.selectdata.data[i]&&ps.n_data.data[i+1]===ps.selectdata.data[i+1]&&ps.n_data.data[i+2]===ps.selectdata.data[i+2]&&ps.n_data.data[i+3]===ps.selectdata.data[i+3]){
+            if(ps.selectdata.data[i]!=0&&ps.selectdata.data[i+1]!=0&&ps.selectdata.data[i+2]!=0&&ps.selectdata.data[i+3]!=0){
+                ps.n_data.data[i]=255;
+                ps.n_data.data[i+1]=255;
+                ps.n_data.data[i+2]=0;
+                ps.n_data.data[i+3]=125;
+
+            }
+        }
+    }
+    this.select_type=1;
+    this.selectAnimate();
+};
 //设置选区---魔术棒工具--默认只选择 闭合区间
 CanvasPs.prototype.wand=function(sx,sy,all){
+    this.select_type=0;
     this.stopAnimate();
     this.o_data = this.ct.getImageData(0, 0, this.c.width, this.c.height);
     var dat = this.ct.getImageData(sx, sy, 1, 1);//采集数据
@@ -439,7 +576,7 @@ CanvasPs.prototype.selectAnimate=function(){
             cps.ct.putImageData(cps.data, 0, 0);
             toggle = true;
         }
-        
+        // console.log('选择')
     }, 500);
 }
 // 选区闪烁提示关闭
@@ -474,44 +611,90 @@ CanvasPs.prototype.scaleCanvas=function(size,ps){
 //删除选区
 CanvasPs.prototype.clearSelect=function(){
     
-    if(!this.select){
-        return;
+    if (this.lastmode===11&&this.select_type===1) {
+        //多边形选择
+        if (this.selectdata) {
+            this.stopAnimate();
+            this.upData();
+            this.addHistory({title:'删除',data:this.data})
+            var dat=this.sample;
+            for (var i = 0; i < this.data.data.length; i+=4) {
+                //选择区
+                if(this.data.data[i]===this.selectdata.data[i]&&this.data.data[i+1]===this.selectdata.data[i+1]&&this.data.data[i+2]===this.selectdata.data[i+2]&&this.data.data[i+3]===this.selectdata.data[i+3]){
+                    this.data.data[i]=0;
+                    this.data.data[i+1]=0;
+                    this.data.data[i+2]=0;
+                    this.data.data[i+3]=0;
+                }
+            }
+            this.ct.putImageData(this.data,0,0);
+            this.ct.restore();
+        }
+    }else{
+        //颜色选择
+        if(this.select&&this.sample){
+            this.stopAnimate();
+            this.upData();
+            this.addHistory({title:'删除',data:this.data})
+            var dat=this.sample;
+            for (var i = 0; i < this.data.data.length; i+=4) {
+                //选择区
+                if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
+                    this.data.data[i]=0;
+                    this.data.data[i+1]=0;
+                    this.data.data[i+2]=0;
+                    this.data.data[i+3]=0;                  
+                }
+            }
+            this.ct.putImageData(this.data,0,0);
+        }
+
     }
-    this.stopAnimate();
-    this.upData();
-    this.addHistory({title:'删除',data:this.data})
-    var dat=this.sample;
-    for (var i = 0; i < this.data.data.length; i+=4) {
-	    //选择区
-	    if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
-            this.data.data[i]=0;
-            this.data.data[i+1]=0;
-			this.data.data[i+2]=0;
-			this.data.data[i+3]=0;					
-		}
-    }
-    this.ct.putImageData(this.data,0,0);
 }
 //填充选区
-CanvasPs.prototype.fillSelect=function(color){
+CanvasPs.prototype.fillSelect=function(){
+    var color=this.config.pen.colors;
     
-    if(!this.select){
-        return;
+    if (this.select&&this.select_type===1&&this.selectdata) {
+
+        //多边形选择
+        if (this.selectdata) {
+            this.stopAnimate();
+            this.upData();
+            this.addHistory({title:'填充',data:this.data})
+            var dat=this.sample;
+            for (var i = 0; i < this.data.data.length; i+=4) {
+                //选择区
+                if((this.selectdata.data[i]!=0&&this.selectdata.data[i+1]!=0&&this.selectdata.data[i+2]!=0&&this.selectdata.data[i+3]!=0)&&(this.data.data[i]===this.selectdata.data[i]&&this.data.data[i+1]===this.selectdata.data[i+1]&&this.data.data[i+2]===this.selectdata.data[i+2]&&this.data.data[i+3]===this.selectdata.data[i+3])){
+                    this.data.data[i]=color[0];
+                    this.data.data[i+1]=color[1];
+                    this.data.data[i+2]=color[2];
+                    this.data.data[i+3]=color[3]*255;
+                }
+            }
+            this.ct.putImageData(this.data,0,0);
+            this.ct.restore();
+        }
+    }else{
+        //颜色选择
+        if(this.select&&this.sample){
+            this.stopAnimate();
+            this.upData();
+            this.addHistory({title:'填充',data:this.data})
+            var dat=this.sample;
+            for (var i = 0; i < this.data.data.length; i+=4) {
+                //选择区
+                if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
+                    this.data.data[i]=color[0];
+                    this.data.data[i+1]=color[1];
+                    this.data.data[i+2]=color[2];
+                    this.data.data[i+3]=color[3]*255;             
+                }
+            }
+            this.ct.putImageData(this.data,0,0);
+        }
+
     }
-    this.stopAnimate();
-    this.upData();
-    this.addHistory({title:'填充',data:this.data})
-    var dat=this.sample;
-    for (var i = 0; i < this.data.data.length; i+=4) {
-	    //选择区
-	    if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
-            this.data.data[i]=color[0];
-            this.data.data[i+1]=color[1];
-			this.data.data[i+2]=color[2];
-			// this.data.data[i+3]=255;					
-		}
-    }
-    this.ct.putImageData(this.data,0,0);
 }
 //更新标准data数据
 CanvasPs.prototype.upData=function(ps){
@@ -525,47 +708,46 @@ CanvasPs.prototype.upData=function(ps){
 }
 //调节颜色
 CanvasPs.prototype.colorControl = function(color) {
-    if (!this.select) {
-        return;
-    }
-    this.stopAnimate();
-    this.upData();
-    this.addHistory({title:'调色',data:this.data})
-    var dat=this.sample;
-    for (var i = 0; i < this.data.data.length; i+=4) {
-        //选择区
-        if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
-            if (this.data.data[i]+parseInt(color[0])>255) {
-                this.data.data[i]=255;
-            }else if (this.data.data[i]+parseInt(color[0])<0) {
-                this.data.data[i]=0;
-            }else{
-                this.data.data[i]+=parseInt(color[0]);
+    if (this.select&&this.select_type===1) {
+        //多边形选择
+        if (this.selectdata) {
+            this.stopAnimate();
+            this.upData();
+            this.addHistory({title:'调色',data:this.data})
+            var dat=this.sample;
+            for (var i = 0; i < this.data.data.length; i+=4) {
+                //选择区
+                if(this.data.data[i]===this.selectdata.data[i]&&this.data.data[i+1]===this.selectdata.data[i+1]&&this.data.data[i+2]===this.selectdata.data[i+2]&&this.data.data[i+3]===this.selectdata.data[i+3]){
+                    this.data.data[i]=color[0];
+                    this.data.data[i+1]=color[1];
+                    this.data.data[i+2]=color[2];
+                    // this.data.data[i+3]=0;
+                }
             }
-            if (this.data.data[i+1]+parseInt(color[1])>255) {
-                this.data.data[i+1]=255;
-            }else if (this.data.data[i+1]+parseInt(color[1])<0) {
-                this.data.data[i+1]=1;
-            }else{
-                this.data.data[i+1]+=parseInt(color[1]);
-            }
-            if (this.data.data[i+2]+parseInt(color[2])>255) {
-                this.data.data[i+2]=255;
-            }else if (this.data.data[i+2]+parseInt(color[2])<0) {
-                this.data.data[i+2]=0;
-            }else{
-                this.data.data[i+2]+=parseInt(color[2]);
-            }
-            if (this.data.data[i+3]+parseInt(color[3])>255) {
-                this.data.data[i+3]=255;
-            }else if (this.data.data[i+3]+parseInt(color[3])<0) {
-                this.data.data[i+3]=0;
-            }else{
-                this.data.data[i+3]+=parseInt(color[3]);
-            }               
+            this.ct.putImageData(this.data,0,0);
+            this.ct.restore();
         }
     }
-    this.ct.putImageData(this.data,0,0);
+    else{
+        if (this.select&&this.sample) {
+            this.stopAnimate();
+            this.upData();
+            this.addHistory({title:'调色',data:this.data})
+            var dat=this.sample;
+            for (var i = 0; i < this.data.data.length; i+=4) {
+                //选择区
+                if(Math.abs(this.data.data[i]-dat.data[0])<=this.alw&&Math.abs(this.data.data[i+1]-dat.data[1])<=this.alw&&Math.abs(this.data.data[i+2]-dat.data[2])<=this.alw&&Math.abs(this.data.data[i+3]-dat.data[3])<=this.alw){
+                    this.data.data[i]=color[0];
+                    this.data.data[i+1]=color[1];
+                    this.data.data[i+2]=color[2];
+                    this.data.data[i+3]=color[3];             
+                }
+            }
+            this.ct.putImageData(this.data,0,0);
+        }
+        
+    }
+    
 }
 //输出 JPEG 格式
 CanvasPs.prototype.save_jpg=function() {
@@ -623,6 +805,16 @@ CanvasPs.prototype.mouseWork=({
     clear:function(x,y,ps){
         if (ps.config.mouse.status==0) {
             ps.ct.clearRect(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100),ps.config.pen.size,ps.config.pen.size);
+        }
+    },
+    //颜色拾取
+    pickercolor:function(x,y,ps){
+        if (ps.config.mouse.status==0) {
+            var color=ps.ct.getImageData(x/(ps.config.canvas.scale/100),y/(ps.config.canvas.scale/100),1,1).data;
+            ps.setColor('rgba('+color[0]+','+color[1]+','+color[2]+','+color[3]);
+            if (ps.pickercallback) {
+                ps.pickercallback(false);
+            }
         }
     },
     //裁剪过程

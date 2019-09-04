@@ -27,17 +27,17 @@ function draw_test() {
     //小提示
     ct.beginPath();
     ct.fillStyle="#FFFFFF";
-    ct.fillRect(320,380,200,40);
+    ct.fillRect(c.width/4-20,380,200,40);
     ct.fillStyle="#61FCF4";
     ct.font="20px Arial";
-    ct.fillText("双击进入像素选区",330,405);
+    ct.fillText("双击进入像素选区",c.width/4,405);
     //文字
     ct.fillStyle="#1785F9";
     ct.font="100px Arial";
-    ct.fillText("welcome",c.width/4,c.height-100);
+    ct.fillText("welcome",20,c.height-100);
     ct.fillStyle="#FF4BFD";
-    ct.font="30px Arial";
-    ct.fillText("在线抠图工具,简单方便 by-jianghong",c.width/5,c.height-50);
+    ct.font="26px Arial";
+    ct.fillText("在线抠图工具,简单方便 by-jianghong",0,c.height-50);
     ps.ready();
 }
 document.onkeyup=function(e){
@@ -48,23 +48,64 @@ document.onkeyup=function(e){
 }
 //弹出颜色调节
 function opencolorwindow() {
-    system.openwindow(1);
-    var c_input=document.querySelectorAll(".contr_color input");
-    for (var i = 0; i < c_input.length; i++) {
-        c_input[i].value=0;
-    }
+    var r_input=document.querySelector('#color_r');
+    var g_input=document.querySelector('#color_g');
+    var b_input=document.querySelector('#color_b');
+    var a_input=document.querySelector('#color_a');
+    // console.log(ps.getColor())
+    var color_str=ps.getColor();
+    color_str=color_str.replace(/[rgba\(\)]/g,'');
+    var color=color_str.split(',');
+    r_input.value=color[0];
+    g_input.value=color[1];
+    b_input.value=color[2];
+    a_input.value=color[3];
+    system.openwindow(1,'','',function(){
+        var color=[parseInt(r_input.value),parseInt(g_input.value),parseInt(b_input.value),parseInt(a_input.value*255)];
+        ps.colorControl(color);
+        ps.setColor('rgba('+r_input.value+','+g_input.value+','+b_input.value+','+a_input.value+')');
+        var show_color_box=document.querySelector('.color_selector');
+        show_color_box.style.backgroundColor=ps.getColor();
+    });
     system.toolmsg('颜色调节');
+}
+//弹出颜色选择器
+function selectcolor(el) {
+    var r_input=document.querySelector('#color_r');
+    var g_input=document.querySelector('#color_g');
+    var b_input=document.querySelector('#color_b');
+    var a_input=document.querySelector('#color_a');
+    var color_str=ps.getColor();
+    color_str=color_str.replace(/[rgba\(\)]/g,'');
+    var color=color_str.split(',');
+    r_input.value=color[0];
+    g_input.value=color[1];
+    b_input.value=color[2];
+    a_input.value=color[3];
+    system.openwindow(1,'','',function(){
+        ps.setColor('rgba('+r_input.value+','+g_input.value+','+b_input.value+','+a_input.value+')');
+        el.style.backgroundColor=ps.getColor();
+        var show_color_box=document.querySelector('.color_selector');
+        show_color_box.style.backgroundColor=ps.getColor();
+    });
+    system.toolmsg('颜色选择');
+}
+//获取 调色器 颜色
+function getcolor(type){
+    var r_input=document.querySelector('#color_r');
+    var g_input=document.querySelector('#color_g');
+    var b_input=document.querySelector('#color_b');
+    var a_input=document.querySelector('#color_a');
+    if (type&&type==1) {
+        return 'rgba('+r_input.value+','+g_input.value+','+b_input.value+','+a_input.value+')';
+    }else{
+        return [r_input.value,g_input.value,b_input.value,a_input.value];
+    }
+    
 }
 //颜色调节函数
 function editcolor() {
-    var color=[0,0,0,0];
-    var c_input=document.querySelectorAll(".contr_color input");
-    color[0]=c_input[0].value;//透明度
-    color[1]=c_input[1].value;//红
-    color[2]=c_input[2].value;//绿
-    color[3]=c_input[3].value;//栏
-    ps.colorControl(color);
-    system.ps.color=color;
+    
 }
 //颜色转化
 function hex2Rgb(hex) { 
@@ -162,7 +203,20 @@ function startcut(el) {
 //填充颜色
 function fillcolor() {
     ps.setMode(8);
-    ps.fillSelect(hex2Rgb(system.ps.pen.color));
+    ps.fillSelect();
+}
+//开启 多边形 选择
+function startpolygon(el) {
+    if (ps.getMode()==11) {
+        ps.setMode(0);
+        el.style.backgroundColor=null;
+    }else{
+        ps.stopAnimate()
+        ps.setMode(11,clearMenuStyle);
+        clearMenuStyle();
+        el.style.backgroundColor="#B2B2B2";
+        system.toolmsg('多边形选择');
+    }
 }
 //开启 涂鸦
 function startdraw(el) {
@@ -207,10 +261,12 @@ function pencut(el) {
 }
 //删除选区
 function del_select() {
+    clearMenuStyle();
     ps.clearSelect();
 }
 //重置画布
 function resetcavans() {
+    clearMenuStyle();
     ps.reMake();
 }
 //缩放画布
@@ -226,6 +282,7 @@ function changecolor(el) {
 }
 //取消选择
 function cancel() {
+    clearMenuStyle();
     ps.stopAnimate()
 }
 //设置容差
@@ -238,10 +295,33 @@ function setpensize(el) {
     ps.setWidth(el.value);
     el.title = el.value;
 }
+//拾色器
+function pickercolor(el){
+    var show_color_box=document.querySelector('.color_selector');
+    if (ps.getMode()==12) {
+        ps.setMode(0);
+        el.style.backgroundColor=null;
+    }else{
+        ps.pickercallback=function(end){
+            if (end) {
+                ps.setMode(0);
+                clearMenuStyle();
+            }else{
+                show_color_box.style.backgroundColor=ps.getColor();
+                // console.log(ps.getColor())
+            }
+        }
+        ps.stopAnimate()
+        ps.setMode(12);
+        clearMenuStyle();
+        el.style.backgroundColor="#B2B2B2";
+        system.toolmsg('拾色器');
+    }
+}
 //鼠标滚动缩放
 c.onwheel=function(e) {
     e.preventDefault();
-    var input_sc=document.querySelectorAll('.menu input')[3];
+    var input_sc=document.querySelectorAll('.menu input')[2];
     var num=parseInt(input_sc.value);
 
     if (e.wheelDelta>0) {
@@ -330,5 +410,5 @@ function dataURLtoBlob(dataurl) {
 }
 //查看帮助
 function helper() {
-    system.alert('双击进入抠图选区,支持裁剪,简单调色,按住空格,鼠标可以拖到画布.可导出多种格式,简单方便!<p>这个版本不再支持移动端！<p>');
+    system.alert('双击进入抠图选区,支持裁剪,简单调色,按住空格,鼠标可以拖到画布.可导出多种格式,简单方便!<p>这个版本不再支持移动端！<br>拾色器按下鼠标移动取色，单机右键结束！<p>');
 }
